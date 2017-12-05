@@ -1,18 +1,20 @@
 import numpy as np
-
-import chainer
-import chainer.functions as F
-import chainer.links as L
-
-from chainercv.links.model.faster_rcnn.faster_rcnn import FasterRCNN
-from chainercv.links.model.faster_rcnn.region_proposal_network import \
-    RegionProposalNetwork
-from chainercv.links.model.vgg.vgg16 import VGG16
-from chainercv.utils import download_model
-
+import torch s t
 from torch import nn
+from torch.nn import functional as F
 from torchvision.models import vgg16
+from .region_proposal_network import RegionProposalNetwork
+from .faster_rcnn import FasterRCNN
+from .ROIModule import ROIPooling2D
 
+
+def decom_vgg16(pretrained=True):
+    # the 30th layer of features is relu of conv5_3
+    model = vgg16(pretrained)
+    features = list(model.features)[:30]
+    classifier = model.classifier
+    del classifier._modules['6']
+    return nn.Sequential(features),classifier
 
 class FasterRCNNVGG16(FasterRCNN):
 
@@ -85,23 +87,13 @@ class FasterRCNNVGG16(FasterRCNN):
             'download/0.0.4/faster_rcnn_vgg16_voc0712_trained_2017_07_21.npz'
         },
     }
-    feat_stride = 16
+    feat_stride = 16 #downsample 16x for output of conv5 in vgg16
 
     def __init__(self,
-                 n_fg_class=None,
-                 pretrained_model=None,
+                 n_fg_class=20,
                  min_size=600, max_size=1000,
-                 ratios=[0.5, 1, 2], anchor_scales=[8, 16, 32],
-                 vgg_initialW=None, rpn_initialW=None,
-                 loc_initialW=None, score_initialW=None,
-                 proposal_creator_params=dict()
+                 ratios=[0.5, 1, 2], anchor_scales=[8, 16, 32]
                  ):
-        if n_fg_class is None:
-            if pretrained_model not in self._models:
-                raise ValueError(
-                    'The n_fg_class needs to be supplied as an argument')
-            n_fg_class = self._models[pretrained_model]['n_fg_class']
-
         extractor,classifier = decom_vgg16()
 
         rpn = RegionProposalNetwork(
@@ -109,16 +101,14 @@ class FasterRCNNVGG16(FasterRCNN):
             ratios=ratios,
             anchor_scales=anchor_scales,
             feat_stride=self.feat_stride,
-            initialW=rpn_initialW,
             proposal_creator_params=proposal_creator_params,
         )
 
         head = VGG16RoIHead(
-            n_fg_class + 1,
-            roi_size=7, spatial_scale=1. / self.feat_stride,
-            vgg_initialW=vgg_initialW,
-            loc_initialW=loc_initialW,
-            score_initialW=score_initialW
+            n_class = n_fg_class + 1,
+            roi_size=7, 
+            spatial_scale=(1./self.feat_stride),
+            classifier=classifier
         )
 
         super(FasterRCNNVGG16, self).__init__(
@@ -132,22 +122,12 @@ class FasterRCNNVGG16(FasterRCNN):
         )
 
 
-def decom_vgg16(pretrained=True):
-    # the 30th layer of features is relu of conv5_3
-    model = vgg16(pretrained)
-    features = list(model.features)[:30]
-    classifier = model.classifier
-    del classifier._modules['6']
-    return nn.Sequential(features),classifier
 
 class VGG16RoIHead(nn.Module):
-
     """Faster R-CNN Head for VGG-16 based implementation.
-
     This class is used as a head for Faster R-CNN.
     This outputs class-wise localizations and classification based on feature
     maps in the given RoIs.
-
     Args:
         n_class (int): The number of classes possibly including the background.
         roi_size (int): Height and width of the feature maps after RoI-pooling.
@@ -160,19 +140,19 @@ class VGG16RoIHead(nn.Module):
     """
 
     def __init__(self, n_class, roi_size, spatial_scale,
-                 vgg_initialW=None, loc_initialW=None, score_initialW=None):
+                 classifier):
         # n_class includes the background
         super(VGG16RoIHead, self).__init__()
         #NOTE： 这里初始化的方式都被我修改，使用默认的初始化方式
 
-        self.fc6 = nn.Linear(25088, 4096)
-        self.fc7 = nn.Linear(4096, 4096, initialW = vgg_initialW)
-        self.cls_loc = nn.Linear(4096, n_class * 4, initialW=loc_initialW)
-        self.score = nn.Linear(4096, n_class, initialW=score_initialW)
+        self.classifier = classifier
+        self.cls_loc = nn.Linear(4096, n_class * 4)
+        self.score = nn.Linear(4096, n_class)
 
         self.n_class = n_class
         self.roi_size = roi_size
         self.spatial_scale = spatial_scale
+        self.roi = ROIPooling2D(self.roi_size,self.roi_size,self.spatial_scale)
 
     def __call__(self, x, rois, roi_indices):
         """Forward the chain.
@@ -191,23 +171,11 @@ class VGG16RoIHead(nn.Module):
                 which bounding boxes correspond to. Its shape is :math:`(R',)`.
 
         """
-        roi_indices = roi_indices.float()
-        indices_and_rois = t.cat(roi_indices[:,None],rois,dim=1)
-
-        ### TODO: implemented roi_pooling
-        pool = _roi_pooling_2d_yx(
-            x, indices_and_rois, self.roi_size, self.roi_size,
-            self.spatial_scale)
-
-        fc6 = F.relu(self.fc6(pool))
-        fc7 = F.relu(self.fc7(fc6))
+        #in case roi_indices is  ndarray
+        roi_indices = t.Tensor(roi_indices).float() 
+        indices_and_rois = t.cat(roi_indices[:, None], rois, dim=1)
+        pool = self.roi(x, indices_and_rois)
+        fc7 = self.classifier(pool)
         roi_cls_locs = self.cls_loc(fc7)
         roi_scores = self.score(fc7)
         return roi_cls_locs, roi_scores
-
-
-def _roi_pooling_2d_yx(x, indices_and_rois, outh, outw, spatial_scale):
-    xy_indices_and_rois = indices_and_rois[:, [0, 2, 1, 4, 3]]
-    pool = F.roi_pooling_2d(
-        x, xy_indices_and_rois, outh, outw, spatial_scale)
-    return pool

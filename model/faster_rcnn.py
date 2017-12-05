@@ -111,7 +111,7 @@ class FasterRCNN(nn.Module):
         # Total number of classes including the background.
         return self.head.n_class
 
-    def __call__(self, x, scale=1.):
+    def forward(self, x, scale=1.):
         """Forward Faster R-CNN.
 
         Scaling paramter :obj:`scale` is used by RPN to determine the
