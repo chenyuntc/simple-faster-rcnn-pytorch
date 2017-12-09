@@ -3,8 +3,8 @@ from torch.nn import functional as F
 import torch as t
 from torch import nn
 
-from .utils.anchor_tool import generate_anchor_base
-from .utils.rpn_tools import ProposalCreator
+from model.utils.anchor_tools import generate_anchor_base
+from model.utils.rpn_tools import ProposalCreator
 
 class RegionProposalNetwork(nn.Module):
 
@@ -51,7 +51,7 @@ class RegionProposalNetwork(nn.Module):
         self.anchor_base = generate_anchor_base(
             anchor_scales=anchor_scales, ratios=ratios)
         self.feat_stride = feat_stride
-        self.proposal_layer = ProposalCreator(**proposal_creator_params)
+        self.proposal_layer = ProposalCreator(self,**proposal_creator_params)
         n_anchor = self.anchor_base.shape[0]
         self.conv1 = nn.Conv2d(in_channels, mid_channels, 3, 1, 1)
         self.score = nn.Conv2d(mid_channels, n_anchor*2, 1, 1, 0)
@@ -105,12 +105,13 @@ class RegionProposalNetwork(nn.Module):
         h = F.relu(self.conv1(x))
 
         rpn_locs = self.loc(h)
-        #NOTE: check whether need contiguous
-        rpn_locs = rpn_locs.permute(0, 2, 3, 1).view(n, -1, 4)
+        #UNNOTE: check whether need contiguous
+        #A: Yes
+        rpn_locs = rpn_locs.permute(0, 2, 3, 1).contiguous().view(n, -1, 4)
         rpn_scores = self.score(h)
-        rpn_scores = rpn_scores.permute((0, 2, 3, 1))
+        rpn_scores = rpn_scores.permute(0, 2, 3, 1).contiguous()
         rpn_fg_scores =\
-            rpn_scores.view(n, hh, ww, n_anchor, 2)[:, :, :, :, 1]
+            rpn_scores.view(n, hh, ww, n_anchor, 2)[:, :, :, :, 1].contiguous()
         rpn_fg_scores = rpn_fg_scores.view(n, -1)
         rpn_scores = rpn_scores.view(n, -1, 2)
 
@@ -118,14 +119,16 @@ class RegionProposalNetwork(nn.Module):
         roi_indices = list()
         for i in range(n):
             roi = self.proposal_layer(
-                rpn_locs[i].array, rpn_fg_scores[i].array, anchor, img_size,
+                rpn_locs[i].cpu().data.numpy(), 
+                rpn_fg_scores[i].cpu().data.numpy(),
+                 anchor, img_size,
                 scale=scale)
             batch_index = i * np.ones((len(roi),), dtype=np.int32)
             rois.append(roi)
             roi_indices.append(batch_index)
 
-        rois = t.cat(rois, dim=0)
-        roi_indices = t.cat(roi_indices, dim=0)
+        rois = np.concatenate(rois, axis=0)
+        roi_indices = np.concatenate(roi_indices, axis=0)
         return rpn_locs, rpn_scores, rois, roi_indices, anchor
 
 def _enumerate_shifted_anchor(anchor_base, feat_stride, height, width):

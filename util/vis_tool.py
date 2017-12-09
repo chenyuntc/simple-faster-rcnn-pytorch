@@ -1,6 +1,8 @@
 import numpy as np
-
-
+import matplotlib
+matplotlib.use('Agg')  
+from matplotlib import pyplot as plot
+from data.voc_dataset import VOC_BBOX_LABEL_NAMES
 def vis_image(img, ax=None):
     """Visualize a color image.
 
@@ -16,7 +18,7 @@ def vis_image(img, ax=None):
         Returns the Axes object with the plot for further tweaking.
 
     """
-    from matplotlib import pyplot as plot
+    
     if ax is None:
         fig = plot.figure()
         ax = fig.add_subplot(1, 1, 1)
@@ -27,7 +29,7 @@ def vis_image(img, ax=None):
 
 
 
-def vis_bbox(img, bbox, label=None, score=None, label_names=None, ax=None):
+def vis_bbox(img, bbox, label=None, score=None , ax=None):
     """Visualize bounding boxes inside image.
 
     Example:
@@ -66,8 +68,8 @@ def vis_bbox(img, bbox, label=None, score=None, label_names=None, ax=None):
         Returns the Axes object with the plot for further tweaking.
 
     """
-    from matplotlib import pyplot as plot
-
+    
+    label_names = VOC_BBOX_LABEL_NAMES
     if label is not None and not len(bbox) == len(label):
         raise ValueError('The length of label must be same as that of bbox')
     if score is not None and not len(bbox) == len(score):
@@ -104,3 +106,40 @@ def vis_bbox(img, bbox, label=None, score=None, label_names=None, ax=None):
                     style='italic',
                     bbox={'facecolor': 'white', 'alpha': 0.7, 'pad': 10})
     return ax
+
+
+
+def fig2data ( fig ):
+    """
+    brief Convert a Matplotlib figure to a 4D numpy array with RGBA 
+    channels and return it
+
+    @param fig： a matplotlib figure
+    @return a numpy 3D array of RGBA values
+    """
+    # draw the renderer
+    fig.canvas.draw ( )
+ 
+    # Get the RGBA buffer from the figure
+    w,h = fig.canvas.get_width_height()
+    buf = np.fromstring ( fig.canvas.tostring_argb(), dtype=np.uint8 )
+    buf.shape = ( w, h,4 )
+ 
+    # canvas.tostring_argb give pixmap in ARGB mode. Roll the ALPHA channel to have it in RGBA mode
+    buf = np.roll ( buf, 3, axis = 2 )
+    return buf.reshape(h,w,4)
+
+def fig4vis(fig):
+    """
+    convert figure to ndarray
+    """
+    ax = fig.get_figure()
+    img_data = fig2data(ax).astype(np.int32)
+    plot.close()
+    # HWC->CHW
+    return img_data[:,:,:3].transpose((2,0,1))/255.
+
+def visdom_bbox(*args,**kwargs):
+    fig = vis_bbox(*args,**kwargs)
+    data = fig4vis(fig)
+    return data

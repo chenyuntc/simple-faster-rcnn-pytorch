@@ -18,24 +18,18 @@
 # --------------------------------------------------------
 
 from __future__ import division
-
+import torch as t
 import numpy as np
-
-import chainer
-from chainer import cuda
-import chainer.functions as F
-from chainercv.links.model.faster_rcnn.utils.loc2bbox import loc2bbox
-from chainercv.utils import non_maximum_suppression
-
-from chainercv.transforms.image.resize import resize
-
-
+import cupy as cp
+from util import array_tool as at
+# from chainercv.transforms.image.resize import resize
+from model.utils.bbox_tools import loc2bbox
+from model.utils.nms import non_maximum_suppression
 
 from torch import nn
-
-
-
-
+from data.dataset import preprocess
+from torch.nn import functional as F
+from config import opt
 class FasterRCNN(nn.Module):
 
     """Base class for Faster R-CNN.
@@ -81,9 +75,6 @@ class FasterRCNN(nn.Module):
             dependent localization paramters and class scores.
         mean (numpy.ndarray): A value to be subtracted from an image
             in :meth:`prepare`.
-        min_size (int): A preprocessing paramter for :meth:`prepare`. Please
-            refer to a docstring found for :meth:`prepare`.
-        max_size (int): A preprocessing paramter for :meth:`prepare`.
         loc_normalize_mean (tuple of four floats): Mean values of
             localization estimates.
         loc_normalize_std (tupler of four floats): Standard deviation
@@ -91,18 +82,14 @@ class FasterRCNN(nn.Module):
 
     """
 
-    def __init__(
-            self, extractor, rpn, head,
-            loc_normalize_mean=(0., 0., 0., 0.),
-            loc_normalize_std=(0.1, 0.1, 0.2, 0.2),
-    ):
+    def __init__(self, extractor, rpn, head):
         super(FasterRCNN, self).__init__()
         self.extractor = extractor
         self.rpn = rpn
         self.head = head
 
-        self.loc_normalize_mean = loc_normalize_mean
-        self.loc_normalize_std = loc_normalize_std
+        self.loc_normalize_mean = opt.loc_normalize_mean
+        self.loc_normalize_std = opt.loc_normalize_std
 
         self.use_preset('visualize')
 
@@ -177,46 +164,13 @@ class FasterRCNN(nn.Module):
         """
         if preset == 'visualize':
             self.nms_thresh = 0.3
+            #TODO: 0.7 origin
             self.score_thresh = 0.7
         elif preset == 'evaluate':
             self.nms_thresh = 0.3
             self.score_thresh = 0.05
         else:
             raise ValueError('preset must be visualize or evaluate')
-
-    def prepare(self, img):
-        """Preprocess an image for feature extraction.
-
-        The length of the shorter edge is scaled to :obj:`self.min_size`.
-        After the scaling, if the length of the longer edge is longer than
-        :obj:`self.max_size`, the image is scaled to fit the longer edge
-        to :obj:`self.max_size`.
-
-        After resizing the image, the image is subtracted by a mean image value
-        :obj:`self.mean`.
-
-        Args:
-            img (~numpy.ndarray): An image. This is in CHW and RGB format.
-                The range of its value is :math:`[0, 255]`.
-
-        Returns:
-            ~numpy.ndarray:
-            A preprocessed image.
-
-        """
-        _, H, W = img.shape
-
-        scale = 1.
-
-        scale = self.min_size / min(H, W)
-
-        if scale * max(H, W) > self.max_size:
-            scale = self.max_size / max(H, W)
-
-        img = resize(img, (int(H * scale), int(W * scale)))
-
-        img = (img - self.mean).astype(np.float32, copy=False)
-        return img
 
     def _suppress(self, raw_cls_bbox, raw_prob):
         bbox = list()
@@ -230,7 +184,8 @@ class FasterRCNN(nn.Module):
             cls_bbox_l = cls_bbox_l[mask]
             prob_l = prob_l[mask]
             keep = non_maximum_suppression(
-                cls_bbox_l, self.nms_thresh, prob_l)
+                cp.array(cls_bbox_l), self.nms_thresh, prob_l)
+            keep = cp.asnumpy(keep)
             bbox.append(cls_bbox_l[keep])
             # The labels are in [0, self.n_class - 2].
             label.append((l - 1) * np.ones((len(keep),)))
@@ -268,11 +223,13 @@ class FasterRCNN(nn.Module):
                Each value indicates how confident the prediction is.
 
         """
+        self.eval()
+        self.use_preset('visualize')
         prepared_imgs = list()
         sizes = list()
         for img in imgs:
             size = img.shape[1:]
-            img = self.prepare(img.astype(np.float32))
+            img = preprocess(img.numpy())
             prepared_imgs.append(img)
             sizes.append(size)
 
@@ -280,41 +237,59 @@ class FasterRCNN(nn.Module):
         labels = list()
         scores = list()
         for img, size in zip(prepared_imgs, sizes):
-            with chainer.using_config('train', False), \
-                    chainer.function.no_backprop_mode():
-                img_var = chainer.Variable(self.xp.asarray(img[None]))
-                scale = img_var.shape[3] / size[1]
-                roi_cls_locs, roi_scores, rois, _ = self.__call__(
-                    img_var, scale=scale)
+            img = t.autograd.Variable(at.totensor(img).float()[None], volatile=True)
+            scale = img.shape[3] / size[1]
+            roi_cls_loc, roi_scores, rois, _ = self(img, scale=scale)
             # We are assuming that batch size is 1.
-            roi_cls_loc = roi_cls_locs.array
-            roi_score = roi_scores.array
-            roi = rois / scale
+            #roi_cls_loc = at.tonumpy(roi_cls_locs)#.data.numpy()
+            roi_score = roi_scores.data
+            roi_cls_loc = roi_cls_loc.data
+            roi = at.totensor(rois) / scale
 
             # Convert predictions to bounding boxes in image coordinates.
             # Bounding boxes are scaled to the scale of the input images.
-            mean = self.xp.tile(self.xp.asarray(self.loc_normalize_mean),
-                                self.n_class)
-            std = self.xp.tile(self.xp.asarray(self.loc_normalize_std),
-                               self.n_class)
-            roi_cls_loc = (roi_cls_loc * std + mean).astype(np.float32)
-            roi_cls_loc = roi_cls_loc.reshape((-1, self.n_class, 4))
-            roi = self.xp.broadcast_to(roi[:, None], roi_cls_loc.shape)
-            cls_bbox = loc2bbox(roi.reshape((-1, 4)),
-                                roi_cls_loc.reshape((-1, 4)))
-            cls_bbox = cls_bbox.reshape((-1, self.n_class * 4))
+            mean = t.Tensor(self.loc_normalize_mean).cuda().\
+                            repeat(self.n_class)[None]
+            std = t.Tensor(self.loc_normalize_std).cuda().\
+                            repeat(self.n_class)[None]
+
+            roi_cls_loc = (roi_cls_loc * std + mean)
+            roi_cls_loc = roi_cls_loc.view(-1, self.n_class, 4)
+            roi = roi.view(-1,1,4).expand_as(roi_cls_loc)
+            cls_bbox = loc2bbox(at.tonumpy(roi).reshape((-1, 4)),
+                                at.tonumpy(roi_cls_loc).reshape((-1, 4)))
+            cls_bbox = at.totensor(cls_bbox)
+            cls_bbox = cls_bbox.view(-1, self.n_class * 4)
             # clip bounding box
-            cls_bbox[:, 0::2] = self.xp.clip(cls_bbox[:, 0::2], 0, size[0])
-            cls_bbox[:, 1::2] = self.xp.clip(cls_bbox[:, 1::2], 0, size[1])
+            cls_bbox[:, 0::2] = (cls_bbox[:, 0::2]).clamp(min =  0, max = size[0])
+            cls_bbox[:, 1::2] = (cls_bbox[:, 1::2]).clamp(min=0,max=size[1])
 
-            prob = F.softmax(roi_score).array
+            prob = at.tonumpy(F.softmax(roi_score))
 
-            raw_cls_bbox = cuda.to_cpu(cls_bbox)
-            raw_prob = cuda.to_cpu(prob)
+            raw_cls_bbox = at.tonumpy(cls_bbox)
+            raw_prob = at.tonumpy(prob)
 
             bbox, label, score = self._suppress(raw_cls_bbox, raw_prob)
             bboxes.append(bbox)
             labels.append(label)
             scores.append(score)
-
+        
+        self.use_preset('evaluate')
+        self.train()
         return bboxes, labels, scores
+
+    def get_optimizer(self):
+        self.lr1,self.lr2,self.lr3 = opt.lr1,opt.lr2,opt.lr3
+        param_groups = [
+            {'params':self.extractor.parameters(), 'lr':opt.lr1},
+            {'params':self.rpn.parameters(), 'lr':opt.lr2},
+            {'params':self.head.parameters(), 'lr':opt.lr3}
+        ]
+        self.optimizer = t.optim.Adam(param_groups,weight_decay=opt.weight_decay)
+        return self.optimizer
+
+    def update_optimizer(self,lr1,lr2,lr3):
+        self.lr1=self.optimizer.param_groups[0]['lr'] = lr1
+        self.lr2=self.optimizer.param_groups[1]['lr'] = lr2
+        self.lr3=self.optimizer.param_groups[2]['lr'] = lr3
+        return self.optimizer

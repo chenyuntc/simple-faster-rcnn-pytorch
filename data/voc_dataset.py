@@ -98,6 +98,7 @@ class VOCBboxDataset():
         self.data_dir = data_dir
         self.use_difficult = use_difficult
         self.return_difficult = return_difficult
+        self.label_names = VOC_BBOX_LABEL_NAMES
 
     def __len__(self):
         return len(self.ids)

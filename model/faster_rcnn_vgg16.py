@@ -1,20 +1,27 @@
 import numpy as np
-import torch s t
+import torch as t
 from torch import nn
 from torch.nn import functional as F
-from torchvision.models import vgg16
+from torchvision.models import vgg16,vgg16_bn
 from .region_proposal_network import RegionProposalNetwork
 from .faster_rcnn import FasterRCNN
 from .ROIModule import ROIPooling2D
-
-
+from util import array_tool as at
+from config import opt
 def decom_vgg16(pretrained=True):
     # the 30th layer of features is relu of conv5_3
     model = vgg16(pretrained)
     features = list(model.features)[:30]
     classifier = model.classifier
     del classifier._modules['6']
-    return nn.Sequential(features),classifier
+    return nn.Sequential(*features),classifier
+def decom_vgg16bn(pretrained=True):
+    # the 30th layer of features is relu of conv5_3
+    model = vgg16_bn(pretrained)
+    features = list(model.features)[:43]
+    classifier = model.classifier
+    del classifier._modules['6']
+    return nn.Sequential(*features),classifier
 
 class FasterRCNNVGG16(FasterRCNN):
 
@@ -74,19 +81,6 @@ class FasterRCNNVGG16(FasterRCNN):
 
     """
 
-    _models = {
-        'voc07': {
-            'n_fg_class': 20,
-            'url': 'https://github.com/yuyu2172/share-weights/releases/'
-            'download/0.0.4/'
-            'faster_rcnn_vgg16_voc07_trained_2017_08_06.npz'
-        },
-        'voc0712': {
-            'n_fg_class': 20,
-            'url': 'https://github.com/yuyu2172/share-weights/releases/'
-            'download/0.0.4/faster_rcnn_vgg16_voc0712_trained_2017_07_21.npz'
-        },
-    }
     feat_stride = 16 #downsample 16x for output of conv5 in vgg16
 
     def __init__(self,
@@ -94,14 +88,13 @@ class FasterRCNNVGG16(FasterRCNN):
                  min_size=600, max_size=1000,
                  ratios=[0.5, 1, 2], anchor_scales=[8, 16, 32]
                  ):
-        extractor,classifier = decom_vgg16()
+        extractor,classifier = decom_vgg16bn(not opt.load_path)
 
         rpn = RegionProposalNetwork(
             512, 512,
             ratios=ratios,
             anchor_scales=anchor_scales,
             feat_stride=self.feat_stride,
-            proposal_creator_params=proposal_creator_params,
         )
 
         head = VGG16RoIHead(
@@ -115,10 +108,6 @@ class FasterRCNNVGG16(FasterRCNN):
             extractor,
             rpn,
             head,
-            mean=np.array([122.7717, 115.9465, 102.9801],
-                          dtype=np.float32)[:, None, None],
-            min_size=min_size,
-            max_size=max_size
         )
 
 
@@ -154,7 +143,7 @@ class VGG16RoIHead(nn.Module):
         self.spatial_scale = spatial_scale
         self.roi = ROIPooling2D(self.roi_size,self.roi_size,self.spatial_scale)
 
-    def __call__(self, x, rois, roi_indices):
+    def forward(self, x, rois, roi_indices):
         """Forward the chain.
 
         We assume that there are :math:`N` batches.
@@ -172,9 +161,12 @@ class VGG16RoIHead(nn.Module):
 
         """
         #in case roi_indices is  ndarray
-        roi_indices = t.Tensor(roi_indices).float() 
-        indices_and_rois = t.cat(roi_indices[:, None], rois, dim=1)
+        roi_indices = at.totensor(roi_indices).float()
+        rois = at.totensor(rois).float()
+        indices_and_rois = t.cat([roi_indices[:, None], rois], dim=1)
+        indices_and_rois = t.autograd.Variable(indices_and_rois)
         pool = self.roi(x, indices_and_rois)
+        pool = pool.view(pool.size(0),-1)
         fc7 = self.classifier(pool)
         roi_cls_locs = self.cls_loc(fc7)
         roi_scores = self.score(fc7)
