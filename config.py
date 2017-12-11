@@ -12,7 +12,7 @@ class Config:
     roi_sigma = 1.
 
     # param for optimizer
-    weight_decay = 0.0005
+    weight_decay = 0.0001 #NOTE:it's modified
     # lr = 1e-3
     lr1 = 1e-4 # extractor
     lr2 = 1e-3 # rpn
@@ -40,7 +40,7 @@ class Config:
     debug_file = '/tmp/debugf'
 
     # model
-    load_path = '/mnt/3/rpn.pth'
+    load_path = None #'/mnt/3/rpn.pth'
 
     def _parse(self,kwargs):
         state_dict = self._state_dict()

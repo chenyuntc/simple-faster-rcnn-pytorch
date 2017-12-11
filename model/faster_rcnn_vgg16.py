@@ -135,6 +135,7 @@ class VGG16RoIHead(nn.Module):
         #NOTE： 这里初始化的方式都被我修改，使用默认的初始化方式
 
         self.classifier = classifier
+        #NOTE: chainer的实现方式中没有dropout
         self.cls_loc = nn.Linear(4096, n_class * 4)
         self.score = nn.Linear(4096, n_class)
 

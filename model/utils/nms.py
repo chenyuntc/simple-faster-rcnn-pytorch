@@ -160,7 +160,7 @@ def _call_nms_kernel(bbox, thresh):
     threads = (threads_per_block, 1, 1)
 
     mask_dev = cp.zeros((n_bbox * col_blocks,), dtype=np.uint64)
-    bbox = cp.ascontiguousarray(bbox, dtype=np.float32)
+    bbox = cp.ascontiguousarray(bbox, dtype=np.float32) # NOTE: 变成连续的
     kern = _load_kernel('nms_kernel', _nms_gpu_code)
     kern(blocks, threads, args=(cp.int32(n_bbox), cp.float32(thresh),
                                 bbox, mask_dev))

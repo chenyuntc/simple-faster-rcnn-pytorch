@@ -80,7 +80,7 @@ class VOCBboxDataset():
             or not. The default value is :obj:`False`.
 
     """
-    def __init__(self, data_dir, split='train', year='2012',
+    def __init__(self, data_dir, split='trainval', year='2012',
                  use_difficult=False, return_difficult=False,
                  transforms=None):
 

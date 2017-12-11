@@ -1,8 +1,6 @@
 from collections import namedtuple
 import numpy as np
 
-import chainer
-from chainer import cuda
 from torch.nn import functional as F
 from model.utils.target_tool import AnchorTargetCreator,ProposalTargetCreator
 
@@ -17,7 +15,7 @@ import matplotlib
 matplotlib.use('agg')
 
 from config import opt
-from torchnet.meter import ConfusionMeter
+from torchnet.meter import ConfusionMeter, AverageValueMeter
 
 
 LossTuple = namedtuple('LossTuple',
@@ -89,6 +87,7 @@ class FasterRCNNTrainer(nn.Module):
         self.vis = Visualizer(env=opt.env)
         self.rpn_cm = ConfusionMeter(2)
         self.roi_cm = ConfusionMeter(21)
+        self.meters = {k:AverageValueMeter() for k in LossTuple._fields} # average loss
 
 
     def forward(self, imgs, bboxes, labels, scale):
@@ -131,7 +130,8 @@ class FasterRCNNTrainer(nn.Module):
         if self.faster_rcnn.lr1==0:features.detach() # detach to speed
         rpn_locs, rpn_scores, rois, roi_indices, anchor = \
             self.faster_rcnn.rpn(features, img_size, scale)
-
+        # self.rpn_locs,self.rpn_score,self.rois,self.roi_indices,self.anchor = \
+        #     at.totensor(rpn_locs), at.totensor(rpn_scores), at.totensor(rois), at.totensor(roi_indices), at.totensor(anchor)
         # Since batch size is one, convert variables to singular form
         bbox = bboxes[0]
         label = labels[0]
@@ -207,17 +207,27 @@ class FasterRCNNTrainer(nn.Module):
         self.optimizer.zero_grad()
         losses,rois = self.forward(imgs, bboxes, labels, scale)
         rpn_loc_loss, rpn_cls_loss, roi_loc_loss, roi_cls_loss = losses
-        if self.opt.stage in {1,3}:
-            loss = losses.rpn_cls_loss+losses.rpn_loc_loss
-        elif self.opt.stage in {2,4}:
-            loss = losses.roi_loc_loss+losses.roi_cls_loss
-        elif self.opt.stage == 0:
-            loss = sum(losses)
-        else:
-            raise ValueError('invalid opt.stage: %s' %self.opt.stage)
+        loss = sum(losses)
         loss.backward()
         self.optimizer.step()
+        self.update_meters(losses)
         return losses,rois
+
+    # def visulize(self):
+
+
+    def update_meters(self, losses):
+        loss_d = {k:at.scalar(v) for k,v in losses._asdict().items()}
+        for key,meter in self.meters.items():
+            meter.add(loss_d[key])
+
+    def reset_meters(self):
+        for key,meter in self.meters.items():
+            meter.reset()
+
+    def get_meter_data(self):
+        return {k:v.value()[0] for k,v in self.meters.items()}
+
         
 
 def _smooth_l1_loss(x, t, in_weight, sigma):
@@ -236,7 +246,9 @@ def _fast_rcnn_loc_loss(pred_loc, gt_loc, gt_label, sigma):
 
     in_weight = t.zeros(gt_loc.shape).cuda()
     # Localization loss is calculated only for positive rois.
+    #### NOTE:  something is wrong or somthing is different to origian implementation
     in_weight[(gt_label > 0).view(-1,1).expand_as(in_weight).cuda()] = 1
+    #####
     loc_loss = _smooth_l1_loss(pred_loc, gt_loc, Variable(in_weight), sigma)
     # Normalize by total number of negtive and positive rois.
     loc_loss /= (gt_label >= 0).sum()

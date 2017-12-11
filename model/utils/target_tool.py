@@ -192,6 +192,7 @@ class AnchorTargetCreator(object):
         Returns:
             (array, array):
 
+            #NOTE: it's scale not only  offset
             * **loc**: Offsets and scales to match the anchors to \
                 the ground truth bounding boxes. Its shape is :math:`(S, 4)`.
             * **label**: Labels of anchors with values \
