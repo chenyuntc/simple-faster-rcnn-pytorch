@@ -1,0 +1,12 @@
+*.pyc
+.*
+__pycache__
+*/tmp/*
+*.ipynb
+*.pth
+model/utils/_*.c
+model/utils/_*.so
+model/utils/_*.o
+
+checkpoints
+model/utils/build/
