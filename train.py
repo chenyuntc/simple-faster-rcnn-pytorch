@@ -6,15 +6,37 @@ from tqdm import tqdm
 
 import torch as t
 from config import opt
-from data.dataset import Dataset
+from data.dataset import Dataset,TestDataset
 from model import FasterRCNNVGG16
 from torch.autograd import Variable
 from torch.utils import data as data_
 from trainer import FasterRCNNTrainer
 from util import array_tool as at
 from util.vis_tool import visdom_bbox
+from util.eval_tool import eval_detection_voc
 
 matplotlib.use('agg')
+
+
+def eval(dataloader,faster_rcnn,test_num=1000):
+    pred_bboxes,pred_labels, pred_scores = list(),list(),list()
+    gt_bboxes,gt_labels, gt_difficults = list(),list(),list()
+    for ii,(imgs,sizes,gt_bboxes_,gt_labels_,gt_difficults_) in tqdm(enumerate(dataloader)):
+        sizes = [sizes[0][0],sizes[1][0]]
+        pred_bboxes_,pred_labels_,pred_scores_ = faster_rcnn.predict2(imgs,[sizes])
+        gt_bboxes += list(gt_bboxes_.numpy())
+        gt_labels += list(gt_labels_.numpy())
+        gt_difficults += list(gt_difficults_.numpy())
+        pred_bboxes += pred_bboxes_
+        pred_labels += pred_labels_
+        pred_scores += pred_scores_
+        if ii==test_num:break
+
+    result = eval_detection_voc(
+        pred_bboxes, pred_labels, pred_labels,
+        gt_bboxes, gt_labels, gt_difficults,
+        use_07_metric=True)
+    return result
 
 def train(**kwargs):
     opt._parse(kwargs)
@@ -25,6 +47,11 @@ def train(**kwargs):
                             batch_size=1,\
                             shuffle=True,\
                             num_workers=opt.num_workers)
+    testset = TestDataset(opt)
+    test_dataloader = data_.DataLoader(testset,
+                                batch_size=1,
+                                num_workers=2,
+                                pin_memory=True)
 
     faster_rcnn = FasterRCNNVGG16()
     print('model completed')
@@ -37,32 +64,51 @@ def train(**kwargs):
 
     for epoch in range(opt.epoch):
         trainer.reset_meters()
-        for ii,(img, bbox_, label_, scale, ori_img) in tqdm(enumerate(dataloader),total=len(dataset)):
+        for ii,(img, bbox_, label_, scale, ori_img) in tqdm(enumerate(dataloader)):
             scale = at.scalar(scale)
             img,bbox,label = img.cuda().float(),bbox_.cuda(),label_.cuda()
             img,bbox,label = Variable(img),Variable(bbox),Variable(label)
             losses,rois = trainer.train_step(img,bbox,label,scale)
-            loss_d = {k:at.scalar(v) for k,v in losses._asdict().items()}
             
             if (ii+1)%opt.plot_every == 0:
                 if os.path.exists(opt.debug_file):
                     ipdb.set_trace()
+                # plot loss
                 trainer.vis.plot_many(trainer.get_meter_data())
+                
+                # plot groud truth bboxes
                 ori_img_ =  (img*0.225+0.45).clamp(min=0,max=1)*255
-                trainer.vis.img('train',visdom_bbox(at.tonumpy(ori_img_)[0],at.tonumpy(bbox_)[0],label_[0].numpy()))
+                trainer.vis.img('gt_img',visdom_bbox(at.tonumpy(ori_img_)[0],at.tonumpy(bbox_)[0],label_[0].numpy()))
+                
+                # plot predicti bboxes
                 _bboxes, _labels, _scores = trainer.faster_rcnn.predict(ori_img)
-                trainer.vis.img('predict',visdom_bbox(at.tonumpy(ori_img[0]),at.tonumpy(_bboxes[0]),at.tonumpy(_labels[0]).reshape(-1)))
+                trainer.vis.img('pred_img',visdom_bbox(at.tonumpy(ori_img[0]),at.tonumpy(_bboxes[0]),at.tonumpy(_labels[0]).reshape(-1)))
+
+                # rpn confusion matrix(meter)
                 trainer.vis.text(str(trainer.rpn_cm.value().tolist()),win='rpn_cm')
-                a2c_ = trainer.roi_cm.value().copy()
-                a2c_[1:,1:] = a2c_[1:,1:]*10
-                # trainer.vis.text(str(trainer.roi_cm.value().tolist()),win='roi_cm')
-                trainer.vis.img('roi_cm',at.totensor(a2c_,False).float())
-                trainer.vis.img('roi_top4',visdom_bbox((at.tonumpy(img[0])*0.25+0.45).clip(min=0,max=1)*255,at.tonumpy(rois[:4])))
-        # if epoch==1:trainer.faster_rcnn.update_optimizer(1e-4,1e-4,1e-4)
-        if epoch==2: trainer.faster_rcnn.update_optimizer(0,5e-4,1e-3)
-        if epoch==5: trainer.faster_rcnn.update_optimizer(2e-4,5e-4,5e-4)
-        if epoch==12: trianer.faster_rcnn.update_optimizer(1e-4,1e-4,1e-4)
-        t.save(trainer.state_dict(),'checkpoints/fasterrcnn_%s.pth' %epoch)
+                # roi confusion matrix
+                trainer.vis.img('roi_cm',at.totensor(trainer.roi_cm.value(),False).float())
+
+                # ooo_ = (at.tonumpy(img[0])*0.25+0.45).clip(min=0,max=1)*255
+                # trainer.vis.img('rpn_roi_top4',
+                #                     visdom_bbox(ooo_,
+                #                     at.tonumpy(rois[:4]))
+                #             )
+                # trainer.vis.img('sample_rois_img', 
+                #         visdom_bbox(ooo_,
+                #             at.tonumpy(trainer.sample_roi[0:12:2]),
+                #             trainer.gt_roi_label[0:12:2]-1)
+                #             )
+                # break #TODO:delete it for debug
+        if epoch==6: # lr decay
+            trainer.faster_rcnn.update_optimizer(opt.lr_decay)
+
+        eval_result  = eval(test_dataloader,faster_rcnn)
+        trainer.vis.plot('test_map', eval_result['map'])
+        trainer.vis.log('map:{},loss:{},roi_cm:{}'.format(str(eval_result),str(trainer.get_meter_data()),str(trainer.rpn_cm.conf.tolist())))
+        trainer.save()
+        # t.save(trainer.state_dict(),'checkpoints/fasterrcnn_%s.pth' %epoch)
+        # t.vis.save([opt.env])
 
 
 if __name__=='__main__':

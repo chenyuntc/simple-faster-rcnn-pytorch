@@ -14,6 +14,12 @@ def decom_vgg16(pretrained=True):
     features = list(model.features)[:30]
     classifier = model.classifier
     del classifier._modules['6']
+
+    # 冻结前几层的卷积
+    for layer in features[:10]:
+        for p in layer.parameters():
+            p.requires_grad=False
+        
     return nn.Sequential(*features),classifier
 def decom_vgg16bn(pretrained=True):
     # the 30th layer of features is relu of conv5_3
@@ -21,6 +27,12 @@ def decom_vgg16bn(pretrained=True):
     features = list(model.features)[:43]
     classifier = model.classifier
     del classifier._modules['6']
+
+    # 冻结前几层的卷积
+    for layer in features[:13]:
+        for p in layer.parameters():
+            p.requires_grad=False
+        
     return nn.Sequential(*features),classifier
 
 class FasterRCNNVGG16(FasterRCNN):
@@ -88,7 +100,7 @@ class FasterRCNNVGG16(FasterRCNN):
                  min_size=600, max_size=1000,
                  ratios=[0.5, 1, 2], anchor_scales=[8, 16, 32]
                  ):
-        extractor,classifier = decom_vgg16bn(not opt.load_path)
+        extractor,classifier = decom_vgg16(not opt.load_path)
 
         rpn = RegionProposalNetwork(
             512, 512,
@@ -139,6 +151,9 @@ class VGG16RoIHead(nn.Module):
         self.cls_loc = nn.Linear(4096, n_class * 4)
         self.score = nn.Linear(4096, n_class)
 
+        normal_init(self.cls_loc,0,0.001)
+        normal_init(self.score,0,0.01)
+
         self.n_class = n_class
         self.roi_size = roi_size
         self.spatial_scale = spatial_scale
@@ -172,3 +187,14 @@ class VGG16RoIHead(nn.Module):
         roi_cls_locs = self.cls_loc(fc7)
         roi_scores = self.score(fc7)
         return roi_cls_locs, roi_scores
+
+def normal_init(m, mean, stddev, truncated=False):
+    """
+    weight initalizer: truncated normal and random normal.
+    """
+    # x is a parameter
+    if truncated:
+        m.weight.data.normal_().fmod_(2).mul_(stddev).add_(mean) # not a perfect approximation
+    else:
+        m.weight.data.normal_(mean, stddev)
+        m.bias.data.zero_()

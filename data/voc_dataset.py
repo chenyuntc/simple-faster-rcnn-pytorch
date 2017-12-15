@@ -80,17 +80,17 @@ class VOCBboxDataset():
             or not. The default value is :obj:`False`.
 
     """
-    def __init__(self, data_dir, split='trainval', year='2012',
+    def __init__(self, data_dir, split='trainval', 
                  use_difficult=False, return_difficult=False,
-                 transforms=None):
+                ):
 
-        if split not in ['train', 'trainval', 'val']:
-            if not (split == 'test' and year == '2007'):
-                warnings.warn(
-                    'please pick split from \'train\', \'trainval\', \'val\''
-                    'for 2012 dataset. For 2007 dataset, you can pick \'test\''
-                    ' in addition to the above mentioned splits.'
-                )
+        # if split not in ['train', 'trainval', 'val']:
+        #     if not (split == 'test' and year == '2007'):
+        #         warnings.warn(
+        #             'please pick split from \'train\', \'trainval\', \'val\''
+        #             'for 2012 dataset. For 2007 dataset, you can pick \'test\''
+        #             ' in addition to the above mentioned splits.'
+        #         )
         id_list_file = os.path.join(
             data_dir, 'ImageSets/Main/{0}.txt'.format(split))
 
@@ -139,7 +139,7 @@ class VOCBboxDataset():
         bbox = np.stack(bbox).astype(np.float32)
         label = np.stack(label).astype(np.int32)
         # When `use_difficult==False`, all elements in `difficult` are False.
-        difficult = np.array(difficult, dtype=np.bool)
+        difficult = np.array(difficult, dtype=np.bool).astype(np.uint8) # PyTorch don't support np.bool
 
         # Load a image
         img_file = os.path.join(self.data_dir, 'JPEGImages', id_ + '.jpg')
@@ -151,17 +151,8 @@ class VOCBboxDataset():
         # if self.return_difficult:
         #     return img, bbox, label, difficult
         return img, bbox, label,difficult
-
-
-def get_voc(root,year,split):
-    key = year
-    base_path = os.path.join(root, 'VOCdevkit/VOC{}'.format(year))
-    split_file = os.path.join(base_path, 'ImageSets/Main/{}.txt'.format(split))
-    if os.path.exists(split_file):
-        return base_path
-    else:
-        raise FileNotFoundError("VOC Data Not Downloaded")
-
+    
+    __getitem__ = get_example
 
 VOC_BBOX_LABEL_NAMES = (
     'aeroplane',

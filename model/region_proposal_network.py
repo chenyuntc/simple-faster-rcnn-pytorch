@@ -56,6 +56,11 @@ class RegionProposalNetwork(nn.Module):
         self.conv1 = nn.Conv2d(in_channels, mid_channels, 3, 1, 1)
         self.score = nn.Conv2d(mid_channels, n_anchor*2, 1, 1, 0)
         self.loc = nn.Conv2d(mid_channels, n_anchor*4, 1, 1, 0)
+        normal_init(self.conv1,0,0.01)
+        normal_init(self.score,0,0.01)
+        normal_init(self.loc,0,0.01)
+        
+        
 
     def forward(self, x, img_size, scale=1.):
         """Forward Region Proposal Network.
@@ -181,3 +186,15 @@ def _enumerate_shifted_anchor_torch(anchor_base, feat_stride, height, width):
         shift.reshape((1, K, 4)).transpose((1, 0, 2))
     anchor = anchor.reshape((K * A, 4)).astype(np.float32)
     return anchor
+
+
+def normal_init(m, mean, stddev, truncated=False):
+    """
+    weight initalizer: truncated normal and random normal.
+    """
+    # x is a parameter
+    if truncated:
+        m.weight.data.normal_().fmod_(2).mul_(stddev).add_(mean) # not a perfect approximation
+    else:
+        m.weight.data.normal_(mean, stddev)
+        m.bias.data.zero_()

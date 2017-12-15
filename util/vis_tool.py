@@ -2,7 +2,32 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')  
 from matplotlib import pyplot as plot
-from data.voc_dataset import VOC_BBOX_LABEL_NAMES
+# from data.voc_dataset import VOC_BBOX_LABEL_NAMES
+
+
+VOC_BBOX_LABEL_NAMES = (
+    'fly',
+    'bike',
+    'bird',
+    'boat',
+    'pin',
+    'bus',
+    'c',
+    'cat',
+    'chair',
+    'cow',
+    'table',
+    'dog',
+    'horse',
+    'moto',
+    'p',
+    'plant',
+    'shep',
+    'sofa',
+    'train',
+    'tv',
+    )
+
 def vis_image(img, ax=None):
     """Visualize a color image.
 
@@ -69,7 +94,8 @@ def vis_bbox(img, bbox, label=None, score=None , ax=None):
 
     """
     
-    label_names = VOC_BBOX_LABEL_NAMES
+    label_names = list(VOC_BBOX_LABEL_NAMES)+['bg']
+    # add for index `-1`
     if label is not None and not len(bbox) == len(label):
         raise ValueError('The length of label must be same as that of bbox')
     if score is not None and not len(bbox) == len(score):
@@ -93,7 +119,7 @@ def vis_bbox(img, bbox, label=None, score=None , ax=None):
 
         if label is not None and label_names is not None:
             lb = label[i]
-            if not (0 <= lb < len(label_names)):
+            if not (-1 <= lb < len(label_names)): # modfy here to add backgroud
                 raise ValueError('No corresponding name is given')
             caption.append(label_names[lb])
         if score is not None:

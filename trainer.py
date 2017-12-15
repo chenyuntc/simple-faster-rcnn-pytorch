@@ -1,6 +1,6 @@
 from collections import namedtuple
 import numpy as np
-
+import time
 from torch.nn import functional as F
 from model.utils.target_tool import AnchorTargetCreator,ProposalTargetCreator
 
@@ -11,8 +11,6 @@ from util.visulizer import Visualizer
 from util import array_tool as at
 from util.vis_tool import visdom_bbox
 
-import matplotlib 
-matplotlib.use('agg')
 
 from config import opt
 from torchnet.meter import ConfusionMeter, AverageValueMeter
@@ -22,7 +20,9 @@ LossTuple = namedtuple('LossTuple',
                         ['rpn_loc_loss',
                         'rpn_cls_loss',
                         'roi_loc_loss',
-                        'roi_cls_loss'])
+                        'roi_cls_loss',
+                        'total_loss'
+                        ])
 
 class FasterRCNNTrainer(nn.Module):
     
@@ -62,11 +62,9 @@ class FasterRCNNTrainer(nn.Module):
     def __init__(self, faster_rcnn, 
                  anchor_target_creator=AnchorTargetCreator(),
                  proposal_target_creator=ProposalTargetCreator(),
-                 optimizer=None
                  ):
         super(FasterRCNNTrainer, self).__init__()
-        self.opt = opt
-        
+
         self.faster_rcnn = faster_rcnn
         self.rpn_sigma = opt.rpn_sigma
         self.roi_sigma = opt.roi_sigma
@@ -77,13 +75,13 @@ class FasterRCNNTrainer(nn.Module):
         self.loc_normalize_mean = opt.loc_normalize_mean
         self.loc_normalize_std = opt.loc_normalize_std
         
-        self.optimizer = optimizer
-        if self.optimizer is None:
-            self.optimizer = self.faster_rcnn.get_optimizer()
+        self.optimizer = self.faster_rcnn.get_optimizer()
             # t.optim.SGD(self.parameters(),lr = opt.lr,
             #                             momentum=0.9,
             #                             weight_decay=opt.weight_decay)
-        
+
+
+        self.opt = opt
         self.vis = Visualizer(env=opt.env)
         self.rpn_cm = ConfusionMeter(2)
         self.roi_cm = ConfusionMeter(21)
@@ -139,8 +137,6 @@ class FasterRCNNTrainer(nn.Module):
         rpn_loc = rpn_locs[0]
         roi = rois
 
-        
-
         # I think it's fine to break the computation graph of rois
         # Sample RoIs and forward
         sample_roi, gt_roi_loc, gt_roi_label = self.proposal_target_creator(
@@ -149,7 +145,7 @@ class FasterRCNNTrainer(nn.Module):
                                 at.tonumpy(label),
                                 self.loc_normalize_mean, 
                                 self.loc_normalize_std)
-
+        self.sample_roi, self.gt_roi_label = sample_roi,gt_roi_label
         #NOTE it's all zero because now it only support for batch=1 now
         sample_roi_index = t.zeros(len(sample_roi))
         roi_cls_loc, roi_score = self.faster_rcnn.head(
@@ -157,7 +153,7 @@ class FasterRCNNTrainer(nn.Module):
                                         sample_roi, 
                                         sample_roi_index)
         
-        # RPN losses
+        #------------------ RPN losses -------------------#
         gt_rpn_loc, gt_rpn_label = self.anchor_target_creator(
                                             at.tonumpy(bbox), 
                                             anchor, 
@@ -176,6 +172,7 @@ class FasterRCNNTrainer(nn.Module):
         _rpn_score = at.tonumpy(rpn_score)[at.tonumpy(gt_rpn_label)>-1]
         self.rpn_cm.add(at.totensor(_rpn_score,False), _gt_rpn_label.data.long())
 
+        #------------------ ROI losses -------------------#
         # Losses for outputs of the head.
         n_sample = roi_cls_loc.shape[0]
         roi_cls_loc = roi_cls_loc.view(n_sample, -1, 4)
@@ -193,27 +190,59 @@ class FasterRCNNTrainer(nn.Module):
                             gt_roi_loc, 
                             gt_roi_label.data,
                             self.roi_sigma)
-        self.roi_loss = nn.CrossEntropyLoss()
+        _roi_loss = nn.CrossEntropyLoss()
         # gt_roi_label = Variable(gt_roi_label)
-        roi_cls_loss =self.roi_loss(roi_score, gt_roi_label.cuda())
+        roi_cls_loss =_roi_loss(roi_score, gt_roi_label.cuda())
 
         self.roi_cm.add(at.totensor(roi_score,False), gt_roi_label.data.long())
 
-        losses = rpn_loc_loss , rpn_cls_loss , roi_loc_loss , roi_cls_loss
+        losses = [rpn_loc_loss , rpn_cls_loss , roi_loc_loss , roi_cls_loss]
+        losses = losses + [sum(losses)]
 
         return LossTuple(*losses),rois
 
     def train_step(self, imgs, bboxes, labels, scale):
         self.optimizer.zero_grad()
         losses,rois = self.forward(imgs, bboxes, labels, scale)
-        rpn_loc_loss, rpn_cls_loss, roi_loc_loss, roi_cls_loss = losses
-        loss = sum(losses)
-        loss.backward()
+        rpn_loc_loss, rpn_cls_loss, roi_loc_loss, roi_cls_loss,total_loss = losses
+        total_loss.backward()
         self.optimizer.step()
         self.update_meters(losses)
         return losses,rois
 
     # def visulize(self):
+
+    def save(self,save_optimizer=False, save_path=None,other_info=None,**kwargs):
+        save_dict = dict()
+        
+        save_dict['model'] =  self.faster_rcnn.state_dict()
+        save_dict['config'] = opt._state_dict()
+        save_dict['other_info'] = kwargs
+        save_dict['vis_info'] = self.vis.state_dict()
+
+        if save_optimizer:
+            save_dict['optimizer'] = self.optimizer.state_dict()
+
+        if save_path is None:
+            timestr = time.strftime('%m%d-%H%M')
+            save_path = 'checkpoints/fasterrcnn_%s' %timestr 
+
+        t.save(save_dict,save_path)
+        self.vis.save([self.vis.env])
+        return save_path
+
+    def load(self,path,parse_opt=False,load_optimizer=True):
+        state_dict = t.load(path)
+        if 'model' in state_dict:
+            self.faster_rcnn.load_state_dict(state_dict['model'])
+        else: # legacy way, for backward compatibility
+            self.load_state_dict(state_dict)
+            return self
+        if parse_opt:
+            opt._parse(state_dict['config'])
+        if 'optimizer' in state_dict and load_optimizer:
+            self.optimizer.load_state_dict(state_dict['optimizer'])
+        return self
 
 
     def update_meters(self, losses):
@@ -224,11 +253,11 @@ class FasterRCNNTrainer(nn.Module):
     def reset_meters(self):
         for key,meter in self.meters.items():
             meter.reset()
+        self.roi_cm.reset()
+        self.rpn_cm.reset()
 
     def get_meter_data(self):
         return {k:v.value()[0] for k,v in self.meters.items()}
-
-        
 
 def _smooth_l1_loss(x, t, in_weight, sigma):
     sigma2 = sigma ** 2

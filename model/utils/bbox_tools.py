@@ -140,9 +140,6 @@ def bbox2loc(src_bbox, dst_bbox):
     return loc
 
 
-
-
-
 def bbox_iou(bbox_a, bbox_b):
     """Calculate the Intersection of Unions (IoUs) between bounding boxes.
 

@@ -3,9 +3,10 @@ from pprint import pprint
 class Config:
     # data
     voc_data_dir = '/mnt/3/VOC/VOCdevkit/VOC2007/'
+    voc_data_dir = '/home/cy/.chainer/dataset/pfnet/chainercv/voc/VOCdevkit/VOC2007/'
     min_size = 600
     max_size = 1000
-    num_workers=8
+    num_workers = 8
 
     # sigma for l1_smooth_loss
     rpn_sigma = 3. 
@@ -13,8 +14,9 @@ class Config:
 
     # param for optimizer
     weight_decay = 0.0001 #NOTE:it's modified
+    lr_decay = 0.1 # 1e-3 -> 1e-4
     # lr = 1e-3
-    lr1 = 1e-4 # extractor
+    lr1 = 1e-3 # extractor
     lr2 = 1e-3 # rpn
     lr3 = 1e-3 # roi head
 
@@ -28,8 +30,10 @@ class Config:
     pretrained_model = 'vgg16'
 
     # training
-    stage = 1 # 4 stage training, -1 for train end2end
     epoch = 100
+
+    # change lr
+    milestone = [0,1,5,10]
 
 
     # mean and std

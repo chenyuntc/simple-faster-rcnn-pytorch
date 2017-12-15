@@ -3,7 +3,7 @@ from .voc_dataset import VOCBboxDataset
 from skimage import transform as sktsf
 from torchvision import transforms as tvtsf
 from . import util
-
+from util import array_tool as at
 def preprocess(img,min_size = 600, max_size = 1000):
     """Preprocess an image for feature extraction.
 
@@ -83,6 +83,22 @@ class Dataset():
         # some of the strides of a given numpy array are negative.
         # This is currently not supported, but will be added in future releases.
         return img.copy(), bbox.copy(), label.copy(), scale,ori_img
+
+    def __len__(self):
+        return len(self.db)
+
+class TestDataset():
+    def __init__(self, opt):
+        self.opt = opt
+        self.db = testset = VOCBboxDataset(opt.voc_data_dir,split='test',use_difficult=True)
+
+    def __getitem__(self, idx):
+        ori_img, bbox, label, difficult = self.db.get_example(idx)
+        img = preprocess(ori_img)
+        return (img),ori_img.shape[1:],bbox, label, difficult
+        #TODO: check whose stride is negative to fix this instead copy all 
+        # some of the strides of a given numpy array are negative.
+        # This is currently not supported, but will be added in future releases.
 
     def __len__(self):
         return len(self.db)

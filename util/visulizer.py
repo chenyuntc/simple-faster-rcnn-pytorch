@@ -12,6 +12,7 @@ class Visualizer(object):
 
     def __init__(self, env='default', **kwargs):
         self.vis = visdom.Visdom(env=env, **kwargs)
+        self._vis_kw = kwargs 
         
         # 画的第几个数，相当于横座标
         # 保存（’loss',23） 即loss的第23个点
@@ -69,11 +70,24 @@ class Visualizer(object):
         '''
         self.log({'loss':1,'lr':0.0001})
         '''
-
         self.log_text += ('[{time}] {info} <br>'.format(
-                            time=time.strftime('%m%d_%H%M%S'),\
-                            info=info)) 
+                            time = time.strftime('%m%d_%H%M%S'),\
+                            info = info))
         self.vis.text(self.log_text,win)   
 
     def __getattr__(self, name):
         return getattr(self.vis, name)
+
+    def state_dict(self):
+        return {
+            'index':self.index,
+            'vis_kw':self._vis_kw,
+            'log_text':self.log_text,
+            'env':self.vis.env
+        }
+
+    def load_state_dict(self,d):
+        self.vis = visdom.Visdom(env=d.get('env',self.vis.env), **(self.d.get('vis_kw')))
+        self.log_text = d.get('log_text','')
+        self.index = d.get('index',dict())
+        return self
