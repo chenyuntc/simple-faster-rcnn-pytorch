@@ -46,14 +46,15 @@ def train(**kwargs):
     dataloader = data_.DataLoader(dataset,\
                             batch_size=1,\
                             shuffle=True,\
-                            pin_memory=True,
+                            # pin_memory=True,
                             num_workers=opt.num_workers)
     testset = TestDataset(opt)
     test_dataloader = data_.DataLoader(testset,
                                 batch_size=1,
                                 num_workers=2,
                                 shuffle=True,\
-                                pin_memory=True)
+                                # pin_memory=True
+                                )
 
     faster_rcnn = FasterRCNNVGG16()
     print('model completed')
@@ -84,7 +85,7 @@ def train(**kwargs):
                 
                 # plot predicti bboxes
                 _bboxes, _labels, _scores = trainer.faster_rcnn.predict(ori_img)
-                trainer.vis.img('pred_img',visdom_bbox(at.tonumpy(ori_img[0]),at.tonumpy(_bboxes[0]),at.tonumpy(_labels[0]).reshape(-1)))
+                trainer.vis.img('pred_img',visdom_bbox(at.tonumpy(ori_img[0]),at.tonumpy(_bboxes[0]),at.tonumpy(_labels[0]).reshape(-1),at.tonumpy(_scores[0])))
 
                 # rpn confusion matrix(meter)
                 trainer.vis.text(str(trainer.rpn_cm.value().tolist()),win='rpn_cm')

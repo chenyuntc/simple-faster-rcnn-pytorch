@@ -36,7 +36,7 @@ def decom_vgg16_chainer(pretrained=True):
     del classifier[2]
     classifier = nn.Sequential(*classifier)
 
-    # chainer ceil mode = True
+    # chainer ceil mode = True for maxpooling
     for idx in [4,9,16,23]:
         features[idx].ceil_mode=True
     # 

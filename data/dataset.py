@@ -30,17 +30,8 @@ def preprocess(img,min_size = 600, max_size = 1000):
     scale = min(scale1, scale2)
     # both the longer and shorter should be less than
     # max_size and min_size
-    #img = resize(img, (int(H * scale), int(W * scale)))
-    
-
-
-    ######
-    from chainercv.transforms import resize
-    # img = sktsf.resize(img, (C,H*scale,W*scale),mode='reflect')
-    img = resize(img, (int(H * scale), int(W * scale)))
-     
-    ########
     img = img / 256.
+    img = sktsf.resize(img, (C,H*scale,W*scale),mode='reflect')
     normalize = tvtsf.Normalize(mean=[0.485, 0.456, 0.406],
                                     std=[0.229, 0.224, 0.225])
 

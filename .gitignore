@@ -10,3 +10,5 @@ model/utils/_*.o
 
 checkpoints
 model/utils/build/
+
+imgs/

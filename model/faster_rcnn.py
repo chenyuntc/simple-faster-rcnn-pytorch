@@ -263,7 +263,7 @@ class FasterRCNN(nn.Module):
             cls_bbox[:, 0::2] = (cls_bbox[:, 0::2]).clamp(min =  0, max = size[0])
             cls_bbox[:, 1::2] = (cls_bbox[:, 1::2]).clamp(min=0,max=size[1])
 
-            prob = at.tonumpy(F.softmax(at.tovariable(roi_score)))
+            prob = at.tonumpy(F.softmax(at.tovariable(roi_score),dim=1))
 
             raw_cls_bbox = at.tonumpy(cls_bbox)
             raw_prob = at.tonumpy(prob)
