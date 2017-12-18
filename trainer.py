@@ -140,11 +140,11 @@ class FasterRCNNTrainer(nn.Module):
         # I think it's fine to break the computation graph of rois
         # Sample RoIs and forward
         sample_roi, gt_roi_loc, gt_roi_label = self.proposal_target_creator(
-                                roi, 
-                                at.tonumpy(bbox),
-                                at.tonumpy(label),
-                                self.loc_normalize_mean, 
-                                self.loc_normalize_std)
+                                    roi, 
+                                    at.tonumpy(bbox),
+                                    at.tonumpy(label),
+                                    self.loc_normalize_mean, 
+                                    self.loc_normalize_std)
         self.sample_roi, self.gt_roi_label = sample_roi,gt_roi_label
         #NOTE it's all zero because now it only support for batch=1 now
         sample_roi_index = t.zeros(len(sample_roi))
@@ -199,16 +199,16 @@ class FasterRCNNTrainer(nn.Module):
         losses = [rpn_loc_loss , rpn_cls_loss , roi_loc_loss , roi_cls_loss]
         losses = losses + [sum(losses)]
 
-        return LossTuple(*losses),rois
+        return LossTuple(*losses)
 
     def train_step(self, imgs, bboxes, labels, scale):
         self.optimizer.zero_grad()
-        losses,rois = self.forward(imgs, bboxes, labels, scale)
+        losses = self.forward(imgs, bboxes, labels, scale)
         rpn_loc_loss, rpn_cls_loss, roi_loc_loss, roi_cls_loss,total_loss = losses
         total_loss.backward()
         self.optimizer.step()
         self.update_meters(losses)
-        return losses,rois
+        return losses
 
     # def visulize(self):
 

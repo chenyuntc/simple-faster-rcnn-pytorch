@@ -13,21 +13,15 @@ def decom_vgg16(pretrained=True):
     model = vgg16(pretrained)
     features = list(model.features)[:30]
     classifier = model.classifier
-    classifier = list(classifier)
-    # delete dropout
-    del classifier[6]
-    del classifier[5]
-    del classifier[2]
-    classifier = nn.Sequential(*classifier)
-    # 
-    # del classifier._modules['6']
+    # classifier = list(classifier)
+    # del the last layer
+    del classifier._modules['6']
 
-    # 冻结前几层的卷积
+    # free top3 conv
     for layer in features[:10]:
         for p in layer.parameters():
             p.requires_grad=False
 
-        
     return nn.Sequential(*features),classifier
 
 def decom_vgg16_chainer(pretrained=True):
@@ -41,6 +35,10 @@ def decom_vgg16_chainer(pretrained=True):
     del classifier[5]
     del classifier[2]
     classifier = nn.Sequential(*classifier)
+
+    # chainer ceil mode = True
+    for idx in [4,9,16,23]:
+        features[idx].ceil_mode=True
     # 
     # del classifier._modules['6']
 
@@ -57,6 +55,8 @@ def decom_vgg16bn(pretrained=True):
     features = list(model.features)[:43]
     classifier = model.classifier
     del classifier._modules['6']
+
+
 
     # 冻结前几层的卷积
     for layer in features[:13]:
@@ -130,7 +130,7 @@ class FasterRCNNVGG16(FasterRCNN):
                  min_size=600, max_size=1000,
                  ratios=[0.5, 1, 2], anchor_scales=[8, 16, 32]
                  ):
-        extractor,classifier = decom_vgg16_chainer(not opt.load_path)
+        extractor,classifier = decom_vgg16(not opt.load_path)
 
         rpn = RegionProposalNetwork(
             512, 512,

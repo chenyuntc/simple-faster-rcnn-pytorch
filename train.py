@@ -33,7 +33,7 @@ def eval(dataloader,faster_rcnn,test_num=1000):
         if ii==test_num:break
 
     result = eval_detection_voc(
-        pred_bboxes, pred_labels, pred_labels,
+        pred_bboxes, pred_labels, pred_scores,
         gt_bboxes, gt_labels, gt_difficults,
         use_07_metric=True)
     return result
@@ -70,7 +70,7 @@ def train(**kwargs):
             scale = at.scalar(scale)
             img,bbox,label = img.cuda().float(),bbox_.cuda(),label_.cuda()
             img,bbox,label = Variable(img),Variable(bbox),Variable(label)
-            losses,rois = trainer.train_step(img,bbox,label,scale)
+            losses = trainer.train_step(img,bbox,label,scale)
             
             if (ii+1)%opt.plot_every == 0:
                 if os.path.exists(opt.debug_file):

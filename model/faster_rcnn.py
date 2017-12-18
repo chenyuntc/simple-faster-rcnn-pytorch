@@ -370,13 +370,13 @@ class FasterRCNN(nn.Module):
         self.lr3=self.optimizer.param_groups[2]['lr'] = lr3
         return self.optimizer
 
-    def get_optimizer(self):
+    def get_optimizer_(self):
         self.lr1=lr = opt.lr1
         params = [param for param in self.parameters() if param.requires_grad]
         self.optimizer = t.optim.SGD(params, lr=lr,momentum=0.9,weight_decay=0.0005)
         return self.optimizer
 
-    def get_optimizer_(self):
+    def get_optimizer(self):
         lr = opt.lr1
         self.lr1= lr
         params = []
@@ -385,7 +385,7 @@ class FasterRCNN(nn.Module):
                 if 'bias' in key:
                     params += [{'params':[value],'lr':lr*2, 'weight_decay':  0}]
                 else:
-                    params += [{'params':[value],'lr':lr, 'weight_decay': 5e-4}]
+                    params += [{'params':[value],'lr':lr, 'weight_decay':opt.weight_decay}]
         self.optimizer = t.optim.SGD(params, momentum=0.9)
         return self.optimizer
 

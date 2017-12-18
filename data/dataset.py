@@ -89,7 +89,7 @@ class Dataset():
         #TODO: check whose stride is negative to fix this instead copy all 
         # some of the strides of a given numpy array are negative.
         # This is currently not supported, but will be added in future releases.
-        return img.copy(), bbox.copy(), label.copy(), scale,ori_img
+        return img.copy(), bbox.copy(), label.copy(), scale, ori_img
 
     def __len__(self):
         return len(self.db)
