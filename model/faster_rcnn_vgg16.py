@@ -13,12 +13,42 @@ def decom_vgg16(pretrained=True):
     model = vgg16(pretrained)
     features = list(model.features)[:30]
     classifier = model.classifier
-    del classifier._modules['6']
+    classifier = list(classifier)
+    # delete dropout
+    del classifier[6]
+    del classifier[5]
+    del classifier[2]
+    classifier = nn.Sequential(*classifier)
+    # 
+    # del classifier._modules['6']
 
     # 冻结前几层的卷积
     for layer in features[:10]:
         for p in layer.parameters():
             p.requires_grad=False
+
+        
+    return nn.Sequential(*features),classifier
+
+def decom_vgg16_chainer(pretrained=True):
+    # the 30th layer of features is relu of conv5_3
+    model = vgg16(pretrained)
+    features = list(model.features)[:30]
+    classifier = model.classifier
+    classifier = list(classifier)
+    # delete dropout
+    del classifier[6]
+    del classifier[5]
+    del classifier[2]
+    classifier = nn.Sequential(*classifier)
+    # 
+    # del classifier._modules['6']
+
+    # 冻结前几层的卷积
+    # for layer in features[:10]:
+    #     for p in layer.parameters():
+    #         p.requires_grad=False
+
         
     return nn.Sequential(*features),classifier
 def decom_vgg16bn(pretrained=True):
@@ -100,7 +130,7 @@ class FasterRCNNVGG16(FasterRCNN):
                  min_size=600, max_size=1000,
                  ratios=[0.5, 1, 2], anchor_scales=[8, 16, 32]
                  ):
-        extractor,classifier = decom_vgg16(not opt.load_path)
+        extractor,classifier = decom_vgg16_chainer(not opt.load_path)
 
         rpn = RegionProposalNetwork(
             512, 512,
@@ -180,7 +210,11 @@ class VGG16RoIHead(nn.Module):
         roi_indices = at.totensor(roi_indices).float()
         rois = at.totensor(rois).float()
         indices_and_rois = t.cat([roi_indices[:, None], rois], dim=1)
-        indices_and_rois = t.autograd.Variable(indices_and_rois)
+        # indices_and_rois = t.autograd.Variable(indices_and_rois)
+        #NOTE: important you forgot it:
+        xy_indices_and_rois = indices_and_rois[:, [0, 2, 1, 4, 3]]
+        indices_and_rois = t.autograd.Variable(xy_indices_and_rois.contiguous())
+
         pool = self.roi(x, indices_and_rois)
         pool = pool.view(pool.size(0),-1)
         fc7 = self.classifier(pool)

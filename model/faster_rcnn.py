@@ -164,7 +164,6 @@ class FasterRCNN(nn.Module):
         """
         if preset == 'visualize':
             self.nms_thresh = 0.3
-            #TODO: 0.7 origin
             self.score_thresh = 0.7
         elif preset == 'evaluate':
             self.nms_thresh = 0.3
@@ -307,7 +306,7 @@ class FasterRCNN(nn.Module):
         """
         self.eval()
         # self.use_preset('visualize')
-
+        self.use_preset('evaluate')
         bboxes = list()
         labels = list()
         scores = list()
@@ -354,10 +353,10 @@ class FasterRCNN(nn.Module):
         return bboxes, labels, scores
 
 
-    def get_optimizer_adam(self):
+    def get_optimizer_3(self):
         self.lr1,self.lr2,self.lr3 = opt.lr1,opt.lr2,opt.lr3
         param_groups = [
-            {'params':self.extractor.parameters(), 'lr':opt.lr1},
+            {'params':[param for param in self.extractor.parameters() if param.requires_grad], 'lr':opt.lr1},
             {'params':self.rpn.parameters(), 'lr':opt.lr2},
             {'params':self.head.parameters(), 'lr':opt.lr3}
         ]
@@ -372,15 +371,21 @@ class FasterRCNN(nn.Module):
         return self.optimizer
 
     def get_optimizer(self):
+        self.lr1=lr = opt.lr1
+        params = [param for param in self.parameters() if param.requires_grad]
+        self.optimizer = t.optim.SGD(params, lr=lr,momentum=0.9,weight_decay=0.0005)
+        return self.optimizer
+
+    def get_optimizer_(self):
         lr = opt.lr1
         self.lr1= lr
         params = []
         for key, value in dict(self.named_parameters()).items():
             if value.requires_grad:
                 if 'bias' in key:
-                    params += [{'params':[value],'lr':lr*(1 + 1), 'weight_decay':  0}]
+                    params += [{'params':[value],'lr':lr*2, 'weight_decay':  0}]
                 else:
-                    params += [{'params':[value],'lr':lr, 'weight_decay': 1e-4}]
+                    params += [{'params':[value],'lr':lr, 'weight_decay': 5e-4}]
         self.optimizer = t.optim.SGD(params, momentum=0.9)
         return self.optimizer
 

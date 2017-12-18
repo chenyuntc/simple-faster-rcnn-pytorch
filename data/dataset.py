@@ -31,9 +31,16 @@ def preprocess(img,min_size = 600, max_size = 1000):
     # both the longer and shorter should be less than
     # max_size and min_size
     #img = resize(img, (int(H * scale), int(W * scale)))
-    img = img / 256
-    img = sktsf.resize(img, (C,H*scale,W*scale),mode='reflect')
+    
 
+
+    ######
+    from chainercv.transforms import resize
+    # img = sktsf.resize(img, (C,H*scale,W*scale),mode='reflect')
+    img = resize(img, (int(H * scale), int(W * scale)))
+     
+    ########
+    img = img / 256.
     normalize = tvtsf.Normalize(mean=[0.485, 0.456, 0.406],
                                     std=[0.229, 0.224, 0.225])
 
@@ -91,6 +98,22 @@ class TestDataset():
     def __init__(self, opt):
         self.opt = opt
         self.db = testset = VOCBboxDataset(opt.voc_data_dir,split='test',use_difficult=True)
+
+    def __getitem__(self, idx):
+        ori_img, bbox, label, difficult = self.db.get_example(idx)
+        img = preprocess(ori_img)
+        return (img),ori_img.shape[1:],bbox, label, difficult
+        #TODO: check whose stride is negative to fix this instead copy all 
+        # some of the strides of a given numpy array are negative.
+        # This is currently not supported, but will be added in future releases.
+
+    def __len__(self):
+        return len(self.db)
+
+class TestDataset2():
+    def __init__(self, opt):
+        self.opt = opt
+        self.db = testset = VOCBboxDataset(opt.voc_data_dir,split='trainval',use_difficult=True)
 
     def __getitem__(self, idx):
         ori_img, bbox, label, difficult = self.db.get_example(idx)
