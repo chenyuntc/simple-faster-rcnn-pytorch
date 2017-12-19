@@ -338,7 +338,7 @@ class FasterRCNN(nn.Module):
             cls_bbox[:, 0::2] = (cls_bbox[:, 0::2]).clamp(min =  0, max = size[0])
             cls_bbox[:, 1::2] = (cls_bbox[:, 1::2]).clamp(min=0,max=size[1])
 
-            prob = at.tonumpy(F.softmax(at.tovariable(roi_score)))
+            prob = at.tonumpy(F.softmax(at.tovariable(roi_score),dim=1))
 
             raw_cls_bbox = at.tonumpy(cls_bbox)
             raw_prob = at.tonumpy(prob)
@@ -353,7 +353,7 @@ class FasterRCNN(nn.Module):
         return bboxes, labels, scores
 
 
-    def get_optimizer_3(self):
+    def get_optimizer_adam(self):
         self.lr1,self.lr2,self.lr3 = opt.lr1,opt.lr2,opt.lr3
         param_groups = [
             {'params':[param for param in self.extractor.parameters() if param.requires_grad], 'lr':opt.lr1},

@@ -37,8 +37,8 @@ def decom_vgg16_chainer(pretrained=True):
     classifier = nn.Sequential(*classifier)
 
     # chainer ceil mode = True for maxpooling
-    for idx in [4,9,16,23]:
-        features[idx].ceil_mode=True
+    # for idx in [4,9,16,23]:
+    #     features[idx].ceil_mode=True
     # 
     # del classifier._modules['6']
 
@@ -47,8 +47,8 @@ def decom_vgg16_chainer(pretrained=True):
     #     for p in layer.parameters():
     #         p.requires_grad=False
 
-        
     return nn.Sequential(*features),classifier
+
 def decom_vgg16bn(pretrained=True):
     # the 30th layer of features is relu of conv5_3
     model = vgg16_bn(pretrained)
@@ -130,7 +130,7 @@ class FasterRCNNVGG16(FasterRCNN):
                  min_size=600, max_size=1000,
                  ratios=[0.5, 1, 2], anchor_scales=[8, 16, 32]
                  ):
-        extractor,classifier = decom_vgg16(not opt.load_path)
+        extractor,classifier = decom_vgg16_chainer(not opt.load_path)
 
         rpn = RegionProposalNetwork(
             512, 512,

@@ -12,3 +12,5 @@ checkpoints
 model/utils/build/
 
 imgs/
+*.png
+*.jpg

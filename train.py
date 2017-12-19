@@ -52,7 +52,7 @@ def train(**kwargs):
     test_dataloader = data_.DataLoader(testset,
                                 batch_size=1,
                                 num_workers=2,
-                                shuffle=True,\
+                                shuffle=False,\
                                 # pin_memory=True
                                 )
 
@@ -64,7 +64,7 @@ def train(**kwargs):
         print('load pretrained model from %s' %opt.load_path)
     
     trainer.vis.text(dataset.db.label_names,win='labels')
-
+    best_map = 0
     for epoch in range(opt.epoch):
         trainer.reset_meters()
         for ii,(img, bbox_, label_, scale, ori_img) in tqdm(enumerate(dataloader)):
@@ -107,9 +107,16 @@ def train(**kwargs):
             trainer.faster_rcnn.update_optimizer(opt.lr_decay)
 
         eval_result  = eval(test_dataloader,faster_rcnn)
+
+        if eval_result['map']>best_map:
+            best_path = trainer.save()
+            best_map = eval_result['map']
+        else:
+            trainer.load(best_path)
+            trainer.faster_rcnn.update_optimizer(opt.lr_decay)
+
         trainer.vis.plot('test_map', eval_result['map'])
         trainer.vis.log('map:{},loss:{},roi_cm:{}'.format(str(eval_result),str(trainer.get_meter_data()),str(trainer.rpn_cm.conf.tolist())))
-        trainer.save()
         # t.save(trainer.state_dict(),'checkpoints/fasterrcnn_%s.pth' %epoch)
         # t.vis.save([opt.env])
 
