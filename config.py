@@ -1,6 +1,10 @@
 from pprint import pprint
 
 
+# Default Configs for training
+# NOTE that, config items could be overwriten by passing argument through command line.
+# e.g. --voc-data-dir='./data/'
+
 class Config:
     # data
     voc_data_dir = '/mnt/3/VOC/VOCdevkit/VOC2007/'
@@ -36,13 +40,12 @@ class Config:
     # change lr
     milestone = [0, 1, 5, 10]
 
-    # mean and std
-    loc_normalize_mean = (0., 0., 0., 0.)
-    loc_normalize_std = (0.1, 0.1, 0.2, 0.2)
+
 
     # debug
     debug_file = '/tmp/debugf'
 
+    test_num = 10000
     # model
     load_path = None  # '/mnt/3/rpn.pth'
 

@@ -1,3 +1,6 @@
+"""
+tools to convert specified type
+"""
 import torch as t
 import numpy as np
 
@@ -30,6 +33,8 @@ def tovariable(data):
         return t.autograd.Variable(data)
     if isinstance(data, t.autograd.Variable):
         return data
+    else:
+        raise ValueError("UnKnow data type: %s, input should be {np.ndarray,Tensor,Variable}" %type(data))
 
 
 def scalar(data):

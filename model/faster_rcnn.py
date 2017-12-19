@@ -83,14 +83,19 @@ class FasterRCNN(nn.Module):
 
     """
 
-    def __init__(self, extractor, rpn, head):
+    def __init__(self, extractor, rpn, head,
+                loc_normalize_mean = (0., 0., 0., 0.),
+                loc_normalize_std = (0.1, 0.1, 0.2, 0.2)
+    ):
         super(FasterRCNN, self).__init__()
         self.extractor = extractor
         self.rpn = rpn
         self.head = head
 
-        self.loc_normalize_mean = opt.loc_normalize_mean
-        self.loc_normalize_std = opt.loc_normalize_std
+        # mean and std
+        self.loc_normalize_mean = loc_normalize_mean
+        self.loc_normalize_std = loc_normalize_std
+
 
         self.use_preset('visualize')
 
@@ -354,7 +359,7 @@ class FasterRCNN(nn.Module):
         self.train()
         return bboxes, labels, scores
 
-    def get_optimizer_adam(self):
+    def get_optimizer_group(self):
         self.lr1, self.lr2, self.lr3 = opt.lr1, opt.lr2, opt.lr3
         param_groups = [
             {'params': [param for param in self.extractor.parameters() if param.requires_grad], 'lr': opt.lr1},
@@ -362,10 +367,10 @@ class FasterRCNN(nn.Module):
             {'params': self.head.parameters(), 'lr': opt.lr3}
         ]
 
-        self.optimizer = t.optim.Adam(param_groups, weight_decay=opt.weight_decay)
+        self.optimizer = t.optim.SGD(param_groups, weight_decay=opt.weight_decay)
         return self.optimizer
 
-    def update_optimizer_adam(self, lr1, lr2, lr3):
+    def update_optimizer_2(self, lr1, lr2, lr3):
         self.lr1 = self.optimizer.param_groups[0]['lr'] = lr1
         self.lr2 = self.optimizer.param_groups[1]['lr'] = lr2
         self.lr3 = self.optimizer.param_groups[2]['lr'] = lr3
@@ -390,7 +395,7 @@ class FasterRCNN(nn.Module):
         self.optimizer = t.optim.SGD(params, momentum=0.9)
         return self.optimizer
 
-    def update_optimizer(self, decay=0.1):
+    def scale_lr(self, decay=0.1):
         for param_group in self.optimizer.param_groups:
             param_group['lr'] *= decay
         return self.optimizer
