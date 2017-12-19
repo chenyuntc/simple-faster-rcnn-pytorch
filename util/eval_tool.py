@@ -156,9 +156,9 @@ def calc_detection_voc_prec_rec(
     match = defaultdict(list)
 
     for pred_bbox, pred_label, pred_score, gt_bbox, gt_label, gt_difficult in \
-        six.moves.zip(
-            pred_bboxes, pred_labels, pred_scores,
-            gt_bboxes, gt_labels, gt_difficults):
+            six.moves.zip(
+                pred_bboxes, pred_labels, pred_scores,
+                gt_bboxes, gt_labels, gt_difficults):
 
         if gt_difficult is None:
             gt_difficult = np.zeros(gt_bbox.shape[0], dtype=bool)

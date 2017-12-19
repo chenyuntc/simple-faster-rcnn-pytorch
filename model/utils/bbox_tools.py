@@ -1,6 +1,7 @@
 import numpy as xp
 
-#!TODO: now only suport for numpy 
+
+# !TODO: now only suport for numpy
 # should I add support for torch.CudaTensor?
 
 def loc2bbox(src_bbox, loc):
@@ -183,6 +184,7 @@ def bbox_iou(bbox_a, bbox_b):
 
 def __test():
     pass
+
 
 if __name__ == '__main__':
     __test()

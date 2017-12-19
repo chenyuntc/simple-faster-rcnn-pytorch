@@ -1,7 +1,9 @@
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')  
+
+matplotlib.use('Agg')
 from matplotlib import pyplot as plot
+
 # from data.voc_dataset import VOC_BBOX_LABEL_NAMES
 
 
@@ -26,7 +28,8 @@ VOC_BBOX_LABEL_NAMES = (
     'sofa',
     'train',
     'tv',
-    )
+)
+
 
 def vis_image(img, ax=None):
     """Visualize a color image.
@@ -43,7 +46,7 @@ def vis_image(img, ax=None):
         Returns the Axes object with the plot for further tweaking.
 
     """
-    
+
     if ax is None:
         fig = plot.figure()
         ax = fig.add_subplot(1, 1, 1)
@@ -53,8 +56,7 @@ def vis_image(img, ax=None):
     return ax
 
 
-
-def vis_bbox(img, bbox, label=None, score=None , ax=None):
+def vis_bbox(img, bbox, label=None, score=None, ax=None):
     """Visualize bounding boxes inside image.
 
     Example:
@@ -93,8 +95,8 @@ def vis_bbox(img, bbox, label=None, score=None , ax=None):
         Returns the Axes object with the plot for further tweaking.
 
     """
-    
-    label_names = list(VOC_BBOX_LABEL_NAMES)+['bg']
+
+    label_names = list(VOC_BBOX_LABEL_NAMES) + ['bg']
     # add for index `-1`
     if label is not None and not len(bbox) == len(label):
         raise ValueError('The length of label must be same as that of bbox')
@@ -119,7 +121,7 @@ def vis_bbox(img, bbox, label=None, score=None , ax=None):
 
         if label is not None and label_names is not None:
             lb = label[i]
-            if not (-1 <= lb < len(label_names)): # modfy here to add backgroud
+            if not (-1 <= lb < len(label_names)):  # modfy here to add backgroud
                 raise ValueError('No corresponding name is given')
             caption.append(label_names[lb])
         if score is not None:
@@ -134,8 +136,7 @@ def vis_bbox(img, bbox, label=None, score=None , ax=None):
     return ax
 
 
-
-def fig2data ( fig ):
+def fig2data(fig):
     """
     brief Convert a Matplotlib figure to a 4D numpy array with RGBA 
     channels and return it
@@ -144,16 +145,17 @@ def fig2data ( fig ):
     @return a numpy 3D array of RGBA values
     """
     # draw the renderer
-    fig.canvas.draw ( )
- 
+    fig.canvas.draw()
+
     # Get the RGBA buffer from the figure
-    w,h = fig.canvas.get_width_height()
-    buf = np.fromstring ( fig.canvas.tostring_argb(), dtype=np.uint8 )
-    buf.shape = ( w, h,4 )
- 
+    w, h = fig.canvas.get_width_height()
+    buf = np.fromstring(fig.canvas.tostring_argb(), dtype=np.uint8)
+    buf.shape = (w, h, 4)
+
     # canvas.tostring_argb give pixmap in ARGB mode. Roll the ALPHA channel to have it in RGBA mode
-    buf = np.roll ( buf, 3, axis = 2 )
-    return buf.reshape(h,w,4)
+    buf = np.roll(buf, 3, axis=2)
+    return buf.reshape(h, w, 4)
+
 
 def fig4vis(fig):
     """
@@ -163,9 +165,10 @@ def fig4vis(fig):
     img_data = fig2data(ax).astype(np.int32)
     plot.close()
     # HWC->CHW
-    return img_data[:,:,:3].transpose((2,0,1))/255.
+    return img_data[:, :, :3].transpose((2, 0, 1)) / 255.
 
-def visdom_bbox(*args,**kwargs):
-    fig = vis_bbox(*args,**kwargs)
+
+def visdom_bbox(*args, **kwargs):
+    fig = vis_bbox(*args, **kwargs)
     data = fig4vis(fig)
     return data

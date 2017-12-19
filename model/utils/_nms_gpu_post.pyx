@@ -3,12 +3,11 @@ from libc.stdint cimport uint64_t
 
 import numpy as np
 
-
 def _nms_gpu_post(np.ndarray[np.uint64_t, ndim=1] mask,
-                 int n_bbox,
-                 int threads_per_block,
-                 int col_blocks
-                 ):
+                  int n_bbox,
+                  int threads_per_block,
+                  int col_blocks
+                  ):
     cdef:
         int i, j, nblock, index
         uint64_t inblock
@@ -17,7 +16,7 @@ def _nms_gpu_post(np.ndarray[np.uint64_t, ndim=1] mask,
         np.ndarray[np.int32_t, ndim=1] selection
         np.ndarray[np.uint64_t, ndim=1] remv
 
-    selection= np.zeros((n_bbox,), dtype=np.int32)
+    selection = np.zeros((n_bbox,), dtype=np.int32)
     remv = np.zeros((col_blocks,), dtype=np.uint64)
 
     for i in range(n_bbox):

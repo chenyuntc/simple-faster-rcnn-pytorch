@@ -1,5 +1,4 @@
-
-kernel_forward ='''
+kernel_forward = '''
     extern "C"
     __global__ void roi_forward(const float* const bottom_data,const float* const bottom_rois,
                 float* top_data, int* argmax_data,
@@ -70,8 +69,8 @@ kernel_forward ='''
     //printf("%d,%d,%d,%d  ",roi_start_w,roi_start_h,roi_end_w,roi_end_h);
     // }
     }
-'''   
-kernel_backward= '''
+'''
+kernel_backward = '''
     extern "C"
     __global__ void roi_backward(const float* const top_diff,
          const int* const argmax_data,const float* const bottom_rois,

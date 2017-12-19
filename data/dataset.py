@@ -4,7 +4,9 @@ from skimage import transform as sktsf
 from torchvision import transforms as tvtsf
 from . import util
 from util import array_tool as at
-def preprocess(img,min_size = 600, max_size = 1000):
+
+
+def preprocess(img, min_size=600, max_size=1000):
     """Preprocess an image for feature extraction.
 
     The length of the shorter edge is scaled to :obj:`self.min_size`.
@@ -31,9 +33,9 @@ def preprocess(img,min_size = 600, max_size = 1000):
     # both the longer and shorter should be less than
     # max_size and min_size
     img = img / 256.
-    img = sktsf.resize(img, (C,H*scale,W*scale),mode='reflect')
+    img = sktsf.resize(img, (C, H * scale, W * scale), mode='reflect')
     normalize = tvtsf.Normalize(mean=[0.485, 0.456, 0.406],
-                                    std=[0.229, 0.224, 0.225])
+                                std=[0.229, 0.224, 0.225])
 
     img = normalize(t.from_numpy(img))
     return img.numpy()
@@ -47,7 +49,7 @@ def preprocess(img,min_size = 600, max_size = 1000):
 
 class Transform(object):
 
-    def __init__(self, min_size=600,max_size=1000):
+    def __init__(self, min_size=600, max_size=1000):
         self.min_size = min_size
         self.max_size = max_size
 
@@ -67,17 +69,18 @@ class Transform(object):
 
         return img, bbox, label, scale
 
+
 class Dataset():
     def __init__(self, opt):
         self.opt = opt
         self.db = VOCBboxDataset(opt.voc_data_dir)
-        self.tsf = Transform(opt.min_size,opt.max_size)
+        self.tsf = Transform(opt.min_size, opt.max_size)
 
     def __getitem__(self, idx):
         ori_img, bbox, label, difficult = self.db.get_example(idx)
 
         img, bbox, label, scale = self.tsf((ori_img, bbox, label))
-        #TODO: check whose stride is negative to fix this instead copy all 
+        # TODO: check whose stride is negative to fix this instead copy all
         # some of the strides of a given numpy array are negative.
         # This is currently not supported, but will be added in future releases.
         return img.copy(), bbox.copy(), label.copy(), scale, ori_img
@@ -85,32 +88,34 @@ class Dataset():
     def __len__(self):
         return len(self.db)
 
+
 class TestDataset():
     def __init__(self, opt):
         self.opt = opt
-        self.db = testset = VOCBboxDataset(opt.voc_data_dir,split='test',use_difficult=True)
+        self.db = testset = VOCBboxDataset(opt.voc_data_dir, split='test', use_difficult=True)
 
     def __getitem__(self, idx):
         ori_img, bbox, label, difficult = self.db.get_example(idx)
         img = preprocess(ori_img)
-        return (img),ori_img.shape[1:],bbox, label, difficult
-        #TODO: check whose stride is negative to fix this instead copy all 
+        return (img), ori_img.shape[1:], bbox, label, difficult
+        # TODO: check whose stride is negative to fix this instead copy all
         # some of the strides of a given numpy array are negative.
         # This is currently not supported, but will be added in future releases.
 
     def __len__(self):
         return len(self.db)
 
+
 class TestDataset2():
     def __init__(self, opt):
         self.opt = opt
-        self.db = testset = VOCBboxDataset(opt.voc_data_dir,split='trainval',use_difficult=True)
+        self.db = testset = VOCBboxDataset(opt.voc_data_dir, split='trainval', use_difficult=True)
 
     def __getitem__(self, idx):
         ori_img, bbox, label, difficult = self.db.get_example(idx)
         img = preprocess(ori_img)
-        return (img),ori_img.shape[1:],bbox, label, difficult
-        #TODO: check whose stride is negative to fix this instead copy all 
+        return (img), ori_img.shape[1:], bbox, label, difficult
+        # TODO: check whose stride is negative to fix this instead copy all
         # some of the strides of a given numpy array are negative.
         # This is currently not supported, but will be added in future releases.
 

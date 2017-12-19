@@ -1,9 +1,8 @@
 import numpy as np
-from model.utils.bbox_tools import bbox2loc,bbox_iou
+from model.utils.bbox_tools import bbox2loc, bbox_iou
 
 
 ##Don't need backward here
-
 
 
 class ProposalTargetCreator(object):
@@ -39,7 +38,7 @@ class ProposalTargetCreator(object):
         self.pos_ratio = pos_ratio
         self.pos_iou_thresh = pos_iou_thresh
         self.neg_iou_thresh_hi = neg_iou_thresh_hi
-        self.neg_iou_thresh_lo = neg_iou_thresh_lo #NOTE: py-faster-rcnn默认的值是0.1
+        self.neg_iou_thresh_lo = neg_iou_thresh_lo  # NOTE: py-faster-rcnn默认的值是0.1
 
     def __call__(self, roi, bbox, label,
                  loc_normalize_mean=(0., 0., 0., 0.),
@@ -134,10 +133,7 @@ class ProposalTargetCreator(object):
         return sample_roi, gt_roi_loc, gt_roi_label
 
 
-
-
 class AnchorTargetCreator(object):
-
     """Assign the ground truth bounding boxes to anchors.
 
     Assigns the ground truth bounding boxes to anchors for training Region
@@ -220,7 +216,7 @@ class AnchorTargetCreator(object):
 
     def _create_label(self, inside_index, anchor, bbox):
         # label: 1 is positive, 0 is negative, -1 is dont care
-        label = np.empty((len(inside_index), ), dtype=np.int32)
+        label = np.empty((len(inside_index),), dtype=np.int32)
         label.fill(-1)
 
         argmax_ious, max_ious, gt_argmax_ious = \

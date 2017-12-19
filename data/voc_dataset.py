@@ -24,8 +24,8 @@ import warnings
 import xml.etree.ElementTree as ET
 from .util import read_image
 
-class VOCBboxDataset():
 
+class VOCBboxDataset():
     """Bounding box dataset for PASCAL `VOC`_.
 
     .. _`VOC`: http://host.robots.ox.ac.uk/pascal/VOC/voc2012/
@@ -80,9 +80,10 @@ class VOCBboxDataset():
             or not. The default value is :obj:`False`.
 
     """
-    def __init__(self, data_dir, split='trainval', 
+
+    def __init__(self, data_dir, split='trainval',
                  use_difficult=False, return_difficult=False,
-                ):
+                 ):
 
         # if split not in ['train', 'trainval', 'val']:
         #     if not (split == 'test' and year == '2007'):
@@ -139,20 +140,18 @@ class VOCBboxDataset():
         bbox = np.stack(bbox).astype(np.float32)
         label = np.stack(label).astype(np.int32)
         # When `use_difficult==False`, all elements in `difficult` are False.
-        difficult = np.array(difficult, dtype=np.bool).astype(np.uint8) # PyTorch don't support np.bool
+        difficult = np.array(difficult, dtype=np.bool).astype(np.uint8)  # PyTorch don't support np.bool
 
         # Load a image
         img_file = os.path.join(self.data_dir, 'JPEGImages', id_ + '.jpg')
         img = read_image(img_file, color=True)
 
-
-
-
         # if self.return_difficult:
         #     return img, bbox, label, difficult
-        return img, bbox, label,difficult
-    
+        return img, bbox, label, difficult
+
     __getitem__ = get_example
+
 
 VOC_BBOX_LABEL_NAMES = (
     'aeroplane',

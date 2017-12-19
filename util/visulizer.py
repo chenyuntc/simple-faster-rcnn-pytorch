@@ -1,9 +1,10 @@
-
-#coding:utf8
+# coding:utf8
 import visdom
 import time
 import numpy as np
 import torch as t
+
+
 class Visualizer(object):
     '''
     封装了visdom的基本操作，但是你仍然可以通过`self.vis.function`
@@ -12,17 +13,18 @@ class Visualizer(object):
 
     def __init__(self, env='default', **kwargs):
         self.vis = visdom.Visdom(env=env, **kwargs)
-        self._vis_kw = kwargs 
-        
+        self._vis_kw = kwargs
+
         # 画的第几个数，相当于横座标
         # 保存（’loss',23） 即loss的第23个点
-        self.index = {} 
+        self.index = {}
         self.log_text = ''
-    def reinit(self,env='default',**kwargs):
+
+    def reinit(self, env='default', **kwargs):
         '''
         修改visdom的配置
         '''
-        self.vis = visdom.Visdom(env=env,**kwargs)
+        self.vis = visdom.Visdom(env=env, **kwargs)
         return self
 
     def plot_many(self, d):
@@ -38,7 +40,7 @@ class Visualizer(object):
         for k, v in d.items():
             self.img(k, v)
 
-    def plot(self, name, y,**kwargs):
+    def plot(self, name, y, **kwargs):
         '''
         self.plot('loss',1.00)
         '''
@@ -51,7 +53,7 @@ class Visualizer(object):
                       )
         self.index[name] = x + 1
 
-    def img(self, name, img_,**kwargs):
+    def img(self, name, img_, **kwargs):
         '''
         self.img('input_img',t.Tensor(64,64))
         self.img('input_imgs',t.Tensor(3,64,64))
@@ -60,34 +62,33 @@ class Visualizer(object):
         ！！！don‘t ~~self.img('input_imgs',t.Tensor(100,64,64),nrows=10)~~！！！
         '''
         self.vis.images(t.Tensor(img_).cpu().numpy(),
-                       win=(name),
-                       opts=dict(title=name),
-                       **kwargs
-                       )
+                        win=(name),
+                        opts=dict(title=name),
+                        **kwargs
+                        )
 
-
-    def log(self,info,win='log_text'):
+    def log(self, info, win='log_text'):
         '''
         self.log({'loss':1,'lr':0.0001})
         '''
         self.log_text += ('[{time}] {info} <br>'.format(
-                            time = time.strftime('%m%d_%H%M%S'),\
-                            info = info))
-        self.vis.text(self.log_text,win)   
+            time=time.strftime('%m%d_%H%M%S'), \
+            info=info))
+        self.vis.text(self.log_text, win)
 
     def __getattr__(self, name):
         return getattr(self.vis, name)
 
     def state_dict(self):
         return {
-            'index':self.index,
-            'vis_kw':self._vis_kw,
-            'log_text':self.log_text,
-            'env':self.vis.env
+            'index': self.index,
+            'vis_kw': self._vis_kw,
+            'log_text': self.log_text,
+            'env': self.vis.env
         }
 
-    def load_state_dict(self,d):
-        self.vis = visdom.Visdom(env=d.get('env',self.vis.env), **(self.d.get('vis_kw')))
-        self.log_text = d.get('log_text','')
-        self.index = d.get('index',dict())
+    def load_state_dict(self, d):
+        self.vis = visdom.Visdom(env=d.get('env', self.vis.env), **(self.d.get('vis_kw')))
+        self.log_text = d.get('log_text', '')
+        self.index = d.get('index', dict())
         return self

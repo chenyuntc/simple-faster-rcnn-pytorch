@@ -5,7 +5,6 @@ import torch as t
 from ._nms_gpu_post import _nms_gpu_post
 
 
-
 @cp.util.memoize(for_each_device=True)
 def _load_kernel(kernel_name, code, options=()):
     cp.cuda.runtime.free(0)
@@ -61,6 +60,7 @@ def non_maximum_suppression(bbox, thresh, score=None,
     """
 
     return _non_maximum_suppression_gpu(bbox, thresh, score, limit)
+
 
 def _non_maximum_suppression_gpu(bbox, thresh, score=None, limit=None):
     if len(bbox) == 0:
@@ -149,7 +149,6 @@ void nms_kernel(const int n_bbox, const float thresh,
 
 
 def _call_nms_kernel(bbox, thresh):
-    
     # PyTorch does not support unsigned long.
     # Doesn't matter,it returns ndarray finally. 
     # So I'll keep it unmodified.
@@ -160,7 +159,7 @@ def _call_nms_kernel(bbox, thresh):
     threads = (threads_per_block, 1, 1)
 
     mask_dev = cp.zeros((n_bbox * col_blocks,), dtype=np.uint64)
-    bbox = cp.ascontiguousarray(bbox, dtype=np.float32) # NOTE: 变成连续的
+    bbox = cp.ascontiguousarray(bbox, dtype=np.float32)  # NOTE: 变成连续的
     kern = _load_kernel('nms_kernel', _nms_gpu_code)
     kern(blocks, threads, args=(cp.int32(n_bbox), cp.float32(thresh),
                                 bbox, mask_dev))

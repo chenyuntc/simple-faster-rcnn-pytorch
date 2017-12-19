@@ -30,8 +30,9 @@ from torch import nn
 from data.dataset import preprocess
 from torch.nn import functional as F
 from config import opt
-class FasterRCNN(nn.Module):
 
+
+class FasterRCNN(nn.Module):
     """Base class for Faster R-CNN.
 
     This is a base class for Faster R-CNN links supporting object detection
@@ -138,7 +139,7 @@ class FasterRCNN(nn.Module):
         img_size = x.shape[2:]
 
         h = self.extractor(x)
-        rpn_locs, rpn_scores, rois, roi_indices, anchor =\
+        rpn_locs, rpn_scores, rois, roi_indices, anchor = \
             self.rpn(h, img_size, scale)
         roi_cls_locs, roi_scores = self.head(
             h, rois, roi_indices)
@@ -240,30 +241,30 @@ class FasterRCNN(nn.Module):
             scale = img.shape[3] / size[1]
             roi_cls_loc, roi_scores, rois, _ = self(img, scale=scale)
             # We are assuming that batch size is 1.
-            #roi_cls_loc = at.tonumpy(roi_cls_locs)#.data.numpy()
+            # roi_cls_loc = at.tonumpy(roi_cls_locs)#.data.numpy()
             roi_score = roi_scores.data
             roi_cls_loc = roi_cls_loc.data
             roi = at.totensor(rois) / scale
 
             # Convert predictions to bounding boxes in image coordinates.
             # Bounding boxes are scaled to the scale of the input images.
-            mean = t.Tensor(self.loc_normalize_mean).cuda().\
-                            repeat(self.n_class)[None]
-            std = t.Tensor(self.loc_normalize_std).cuda().\
-                            repeat(self.n_class)[None]
+            mean = t.Tensor(self.loc_normalize_mean).cuda(). \
+                repeat(self.n_class)[None]
+            std = t.Tensor(self.loc_normalize_std).cuda(). \
+                repeat(self.n_class)[None]
 
             roi_cls_loc = (roi_cls_loc * std + mean)
             roi_cls_loc = roi_cls_loc.view(-1, self.n_class, 4)
-            roi = roi.view(-1,1,4).expand_as(roi_cls_loc)
+            roi = roi.view(-1, 1, 4).expand_as(roi_cls_loc)
             cls_bbox = loc2bbox(at.tonumpy(roi).reshape((-1, 4)),
                                 at.tonumpy(roi_cls_loc).reshape((-1, 4)))
             cls_bbox = at.totensor(cls_bbox)
             cls_bbox = cls_bbox.view(-1, self.n_class * 4)
             # clip bounding box
-            cls_bbox[:, 0::2] = (cls_bbox[:, 0::2]).clamp(min =  0, max = size[0])
-            cls_bbox[:, 1::2] = (cls_bbox[:, 1::2]).clamp(min=0,max=size[1])
+            cls_bbox[:, 0::2] = (cls_bbox[:, 0::2]).clamp(min=0, max=size[0])
+            cls_bbox[:, 1::2] = (cls_bbox[:, 1::2]).clamp(min=0, max=size[1])
 
-            prob = at.tonumpy(F.softmax(at.tovariable(roi_score),dim=1))
+            prob = at.tonumpy(F.softmax(at.tovariable(roi_score), dim=1))
 
             raw_cls_bbox = at.tonumpy(cls_bbox)
             raw_prob = at.tonumpy(prob)
@@ -272,11 +273,12 @@ class FasterRCNN(nn.Module):
             bboxes.append(bbox)
             labels.append(label)
             scores.append(score)
-        
+
         self.use_preset('evaluate')
         self.train()
         return bboxes, labels, scores
-    def predict2(self, prepared_imgs,sizes):
+
+    def predict2(self, prepared_imgs, sizes):
         """Detect objects from images.
 
         This method predicts objects for each image.
@@ -315,30 +317,30 @@ class FasterRCNN(nn.Module):
             scale = img.shape[3] / size[1]
             roi_cls_loc, roi_scores, rois, _ = self(img, scale=scale)
             # We are assuming that batch size is 1.
-            #roi_cls_loc = at.tonumpy(roi_cls_locs)#.data.numpy()
+            # roi_cls_loc = at.tonumpy(roi_cls_locs)#.data.numpy()
             roi_score = roi_scores.data
             roi_cls_loc = roi_cls_loc.data
             roi = at.totensor(rois) / scale
 
             # Convert predictions to bounding boxes in image coordinates.
             # Bounding boxes are scaled to the scale of the input images.
-            mean = t.Tensor(self.loc_normalize_mean).cuda().\
-                            repeat(self.n_class)[None]
-            std = t.Tensor(self.loc_normalize_std).cuda().\
-                            repeat(self.n_class)[None]
+            mean = t.Tensor(self.loc_normalize_mean).cuda(). \
+                repeat(self.n_class)[None]
+            std = t.Tensor(self.loc_normalize_std).cuda(). \
+                repeat(self.n_class)[None]
 
             roi_cls_loc = (roi_cls_loc * std + mean)
             roi_cls_loc = roi_cls_loc.view(-1, self.n_class, 4)
-            roi = roi.view(-1,1,4).expand_as(roi_cls_loc)
+            roi = roi.view(-1, 1, 4).expand_as(roi_cls_loc)
             cls_bbox = loc2bbox(at.tonumpy(roi).reshape((-1, 4)),
                                 at.tonumpy(roi_cls_loc).reshape((-1, 4)))
             cls_bbox = at.totensor(cls_bbox)
             cls_bbox = cls_bbox.view(-1, self.n_class * 4)
             # clip bounding box
-            cls_bbox[:, 0::2] = (cls_bbox[:, 0::2]).clamp(min =  0, max = size[0])
-            cls_bbox[:, 1::2] = (cls_bbox[:, 1::2]).clamp(min=0,max=size[1])
+            cls_bbox[:, 0::2] = (cls_bbox[:, 0::2]).clamp(min=0, max=size[0])
+            cls_bbox[:, 1::2] = (cls_bbox[:, 1::2]).clamp(min=0, max=size[1])
 
-            prob = at.tonumpy(F.softmax(at.tovariable(roi_score),dim=1))
+            prob = at.tonumpy(F.softmax(at.tovariable(roi_score), dim=1))
 
             raw_cls_bbox = at.tonumpy(cls_bbox)
             raw_prob = at.tonumpy(prob)
@@ -347,49 +349,48 @@ class FasterRCNN(nn.Module):
             bboxes.append(bbox)
             labels.append(label)
             scores.append(score)
-        
+
         # self.use_preset('evaluate')
         self.train()
         return bboxes, labels, scores
 
-
     def get_optimizer_adam(self):
-        self.lr1,self.lr2,self.lr3 = opt.lr1,opt.lr2,opt.lr3
+        self.lr1, self.lr2, self.lr3 = opt.lr1, opt.lr2, opt.lr3
         param_groups = [
-            {'params':[param for param in self.extractor.parameters() if param.requires_grad], 'lr':opt.lr1},
-            {'params':self.rpn.parameters(), 'lr':opt.lr2},
-            {'params':self.head.parameters(), 'lr':opt.lr3}
+            {'params': [param for param in self.extractor.parameters() if param.requires_grad], 'lr': opt.lr1},
+            {'params': self.rpn.parameters(), 'lr': opt.lr2},
+            {'params': self.head.parameters(), 'lr': opt.lr3}
         ]
 
-        self.optimizer = t.optim.Adam(param_groups,weight_decay=opt.weight_decay)
+        self.optimizer = t.optim.Adam(param_groups, weight_decay=opt.weight_decay)
         return self.optimizer
 
-    def update_optimizer_adam(self,lr1,lr2,lr3):
-        self.lr1=self.optimizer.param_groups[0]['lr'] = lr1
-        self.lr2=self.optimizer.param_groups[1]['lr'] = lr2
-        self.lr3=self.optimizer.param_groups[2]['lr'] = lr3
+    def update_optimizer_adam(self, lr1, lr2, lr3):
+        self.lr1 = self.optimizer.param_groups[0]['lr'] = lr1
+        self.lr2 = self.optimizer.param_groups[1]['lr'] = lr2
+        self.lr3 = self.optimizer.param_groups[2]['lr'] = lr3
         return self.optimizer
 
     def get_optimizer_(self):
-        self.lr1=lr = opt.lr1
+        self.lr1 = lr = opt.lr1
         params = [param for param in self.parameters() if param.requires_grad]
-        self.optimizer = t.optim.SGD(params, lr=lr,momentum=0.9,weight_decay=0.0005)
+        self.optimizer = t.optim.SGD(params, lr=lr, momentum=0.9, weight_decay=0.0005)
         return self.optimizer
 
     def get_optimizer(self):
         lr = opt.lr1
-        self.lr1= lr
+        self.lr1 = lr
         params = []
         for key, value in dict(self.named_parameters()).items():
             if value.requires_grad:
                 if 'bias' in key:
-                    params += [{'params':[value],'lr':lr*2, 'weight_decay':  0}]
+                    params += [{'params': [value], 'lr': lr * 2, 'weight_decay': 0}]
                 else:
-                    params += [{'params':[value],'lr':lr, 'weight_decay':opt.weight_decay}]
+                    params += [{'params': [value], 'lr': lr, 'weight_decay': opt.weight_decay}]
         self.optimizer = t.optim.SGD(params, momentum=0.9)
         return self.optimizer
 
-    def update_optimizer(self,decay=0.1):
+    def update_optimizer(self, decay=0.1):
         for param_group in self.optimizer.param_groups:
             param_group['lr'] *= decay
         return self.optimizer

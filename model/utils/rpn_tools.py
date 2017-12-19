@@ -6,6 +6,7 @@ from torch import nn
 from .bbox_tools import loc2bbox
 from .nms import non_maximum_suppression
 
+
 class ProposalCreator():
     # unNOTE: I'll make it undifferential
     # unTODO: make sure it's ok
@@ -64,7 +65,6 @@ class ProposalCreator():
         self.n_test_post_nms = n_test_post_nms
         self.force_cpu_nms = force_cpu_nms
         self.min_size = min_size
-
 
     def __call__(self, loc, score,
                  anchor, img_size, scale=1.):
@@ -141,17 +141,19 @@ class ProposalCreator():
         # Apply nms (e.g. threshold = 0.7).
         # Take after_nms_topN (e.g. 300).
 
-        #NOTE: somthing is wrong here!
+        # NOTE: somthing is wrong here!
         keep = non_maximum_suppression(
-                cuda.to_gpu(roi),
-                thresh=self.nms_thresh)
+            cuda.to_gpu(roi),
+            thresh=self.nms_thresh)
         if n_post_nms > 0:
             keep = keep[:n_post_nms]
         roi = roi[keep]
         return roi
 
+
 def __test():
     pass
+
 
 if __name__ == '__main__':
     __test()
