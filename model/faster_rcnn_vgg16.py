@@ -132,7 +132,10 @@ class FasterRCNNVGG16(FasterRCNN):
                  min_size=600, max_size=1000,
                  ratios=[0.5, 1, 2], anchor_scales=[8, 16, 32]
                  ):
-        extractor, classifier = decom_vgg16_chainer(not opt.load_path)
+                 
+        if opt.use_chainer:decom = decom_vgg16_chainer
+        else: decom = decom_vgg16
+        extractor, classifier = decom(not opt.load_path)
 
         rpn = RegionProposalNetwork(
             512, 512,

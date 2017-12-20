@@ -57,7 +57,6 @@ class FasterRCNNTrainer(nn.Module):
         self.optimizer = self.faster_rcnn.get_optimizer()
         if opt.use_adam:
             self.optimizer = self.faster_rcnn.get_optimizer_adam()
-
         # visdom wrapper
         self.vis = Visualizer(env=opt.env)
 

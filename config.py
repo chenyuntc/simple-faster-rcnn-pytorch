@@ -41,7 +41,7 @@ class Config:
     milestone = [0, 1, 5, 10]
 
     use_adam = False
-
+    use_chainer = False
     # debug
     debug_file = '/tmp/debugf'
 

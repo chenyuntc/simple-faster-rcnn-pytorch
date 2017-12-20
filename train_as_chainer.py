@@ -17,6 +17,7 @@ from util.eval_tool import eval_detection_voc
 
 matplotlib.use('agg')
 
+
 def eval(dataloader, faster_rcnn, test_num=10000):
     pred_bboxes, pred_labels, pred_scores = list(), list(), list()
     gt_bboxes, gt_labels, gt_difficults = list(), list(), list()
@@ -64,6 +65,8 @@ def train(**kwargs):
 
     trainer.vis.text(dataset.db.label_names, win='labels')
     best_map = 0
+    trainer.optimizer = faster_rcnn.get_optimizer_chainer()
+
     for epoch in range(opt.epoch):
         trainer.reset_meters()
         for ii, (img, bbox_, label_, scale, ori_img) in tqdm(enumerate(dataloader)):
@@ -98,16 +101,15 @@ def train(**kwargs):
                 trainer.vis.text(str(trainer.rpn_cm.value().tolist()), win='rpn_cm')
                 # roi confusion matrix
                 trainer.vis.img('roi_cm', at.totensor(trainer.roi_cm.conf, False).float())
-        if best_map>0.6: 
-            opt.test_num=10000
-            best_map = 0
+        if epoch<9:
+            continue
+
         eval_result = eval(test_dataloader, faster_rcnn, test_num=opt.test_num)
 
-        if eval_result['map'] > best_map:
-            best_map = eval_result['map']
-            best_path = trainer.save(best_map=best_map)
-        else:
-            trainer.load(best_path)
+        best_map = eval_result['map']
+        best_path = trainer.save(best_map=best_map)
+
+        if epoch ==9:
             trainer.faster_rcnn.scale_lr(opt.lr_decay)
 
         trainer.vis.plot('test_map', eval_result['map'])
@@ -116,6 +118,7 @@ def train(**kwargs):
                                             str(eval_result['map']), 
                                             str(trainer.get_meter_data()))
         trainer.vis.log(log_info)
+        if epoch == 14:break
         # t.save(trainer.state_dict(),'checkpoints/fasterrcnn_%s.pth' %epoch)
         # t.vis.save([opt.env])
 

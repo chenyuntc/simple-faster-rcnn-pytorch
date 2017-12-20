@@ -94,9 +94,6 @@ class FasterRCNN(nn.Module):
         self.loc_normalize_mean = loc_normalize_mean
         self.loc_normalize_std = loc_normalize_std
 
-
-        self.use_preset('visualize')
-
     @property
     def n_class(self):
         # Total number of classes including the background.
@@ -198,7 +195,7 @@ class FasterRCNN(nn.Module):
         score = np.concatenate(score, axis=0).astype(np.float32)
         return bbox, label, score
 
-    def predict(self, imgs):
+    def predict(self, imgs,visualize=False):
         """Detect objects from images.
 
         This method predicts objects for each image.
@@ -227,7 +224,8 @@ class FasterRCNN(nn.Module):
 
         """
         self.eval()
-        self.use_preset('visualize')
+        if visualize:
+            self.use_preset('visualize')
         prepared_imgs = list()
         sizes = list()
         for img in imgs:
@@ -278,82 +276,6 @@ class FasterRCNN(nn.Module):
             scores.append(score)
 
         self.use_preset('evaluate')
-        self.train()
-        return bboxes, labels, scores
-
-    def predict2(self, prepared_imgs, sizes):
-        """Detect objects from images.
-
-        This method predicts objects for each image.
-
-        Args:
-            imgs (iterable of numpy.ndarray): Arrays holding images.
-                All images are in CHW and RGB format
-                and the range of their value is :math:`[0, 255]`.
-
-        Returns:
-           tuple of lists:
-           This method returns a tuple of three lists,
-           :obj:`(bboxes, labels, scores)`.
-
-           * **bboxes**: A list of float arrays of shape :math:`(R, 4)`, \
-               where :math:`R` is the number of bounding boxes in a image. \
-               Each bouding box is organized by \
-               :math:`(y_{min}, x_{min}, y_{max}, x_{max})` \
-               in the second axis.
-           * **labels** : A list of integer arrays of shape :math:`(R,)`. \
-               Each value indicates the class of the bounding box. \
-               Values are in range :math:`[0, L - 1]`, where :math:`L` is the \
-               number of the foreground classes.
-           * **scores** : A list of float arrays of shape :math:`(R,)`. \
-               Each value indicates how confident the prediction is.
-
-        """
-        self.eval()
-        # self.use_preset('visualize')
-        self.use_preset('evaluate')
-        bboxes = list()
-        labels = list()
-        scores = list()
-        for img, size in zip(prepared_imgs, sizes):
-            img = t.autograd.Variable(at.totensor(img).float()[None], volatile=True)
-            scale = img.shape[3] / size[1]
-            roi_cls_loc, roi_scores, rois, _ = self(img, scale=scale)
-            # We are assuming that batch size is 1.
-            # roi_cls_loc = at.tonumpy(roi_cls_locs)#.data.numpy()
-            roi_score = roi_scores.data
-            roi_cls_loc = roi_cls_loc.data
-            roi = at.totensor(rois) / scale
-
-            # Convert predictions to bounding boxes in image coordinates.
-            # Bounding boxes are scaled to the scale of the input images.
-            mean = t.Tensor(self.loc_normalize_mean).cuda(). \
-                repeat(self.n_class)[None]
-            std = t.Tensor(self.loc_normalize_std).cuda(). \
-                repeat(self.n_class)[None]
-
-            roi_cls_loc = (roi_cls_loc * std + mean)
-            roi_cls_loc = roi_cls_loc.view(-1, self.n_class, 4)
-            roi = roi.view(-1, 1, 4).expand_as(roi_cls_loc)
-            cls_bbox = loc2bbox(at.tonumpy(roi).reshape((-1, 4)),
-                                at.tonumpy(roi_cls_loc).reshape((-1, 4)))
-            cls_bbox = at.totensor(cls_bbox)
-            cls_bbox = cls_bbox.view(-1, self.n_class * 4)
-            # clip bounding box
-            cls_bbox[:, 0::2] = (cls_bbox[:, 0::2]).clamp(min=0, max=size[0])
-            cls_bbox[:, 1::2] = (cls_bbox[:, 1::2]).clamp(min=0, max=size[1])
-
-            prob = at.tonumpy(F.softmax(at.tovariable(roi_score), dim=1))
-
-            raw_cls_bbox = at.tonumpy(cls_bbox)
-            raw_prob = at.tonumpy(prob)
-
-            bbox, label, score = self._suppress(raw_cls_bbox, raw_prob)
-            bboxes.append(bbox)
-            labels.append(label)
-            scores.append(score)
-
-        # self.use_preset('evaluate')
         self.train()
         return bboxes, labels, scores
 
@@ -409,4 +331,26 @@ class FasterRCNN(nn.Module):
                 else:
                     params += [{'params': [value], 'lr': lr, 'weight_decay': opt.weight_decay}]
         self.optimizer = t.optim.Adam(params)
+        return self.optimizer
+
+    def get_optimizer_chainer(self):
+        self.optimizer = t.optim.SGD(self.parameters(), 
+                            lr = opt.lr1,
+                            momentum=0.9,
+                            weight_decay=opt.weight_decay)
+        return self.optimizer
+
+    def get_great_optimizer(self,warm_start=True):
+        lr = opt.lr1
+        self.lr1 = lr
+        params = []
+        for key, value in dict(self.named_parameters()).items():
+            if warm_start and ('extractor' in key  or 'classifier' in key):
+                continue
+            if value.requires_grad:
+                if 'bias' in key:
+                    params += [{'params': [value], 'lr': lr * 2, 'weight_decay': 0}]
+                else:
+                    params += [{'params': [value], 'lr': lr, 'weight_decay': opt.weight_decay}]
+        self.optimizer = t.optim.SGD(params, momentum=0.9)
         return self.optimizer
