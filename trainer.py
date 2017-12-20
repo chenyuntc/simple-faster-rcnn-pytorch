@@ -55,6 +55,8 @@ class FasterRCNNTrainer(nn.Module):
         self.loc_normalize_std = faster_rcnn.loc_normalize_std
 
         self.optimizer = self.faster_rcnn.get_optimizer()
+        if opt.use_adam:
+            self.optimizer = self.faster_rcnn.get_optimizer_adam()
 
         # visdom wrapper
         self.vis = Visualizer(env=opt.env)
@@ -198,7 +200,7 @@ class FasterRCNNTrainer(nn.Module):
             save_dict['optimizer'] = self.optimizer.state_dict()
 
         if save_path is None:
-            timestr = time.strftime('%m%d-%H%M')
+            timestr = time.strftime('%m%d%H%M')
             save_path = 'checkpoints/fasterrcnn_%s' % timestr
             for k_,v_ in kwargs.items():
                 save_path += '_%s' %v_

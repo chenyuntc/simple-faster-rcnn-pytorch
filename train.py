@@ -99,7 +99,9 @@ def train(**kwargs):
                 trainer.vis.text(str(trainer.rpn_cm.value().tolist()), win='rpn_cm')
                 # roi confusion matrix
                 trainer.vis.img('roi_cm', at.totensor(trainer.roi_cm.conf, False).float())
-
+        if best_map>0.6: 
+            opt.test_num=10000
+            best_map = 0
         eval_result = eval(test_dataloader, faster_rcnn, test_num=opt.test_num)
 
         if eval_result['map'] > best_map:

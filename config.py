@@ -18,7 +18,7 @@ class Config:
     roi_sigma = 1.
 
     # param for optimizer
-    weight_decay = 0.0001  # NOTE:it's modified
+    weight_decay = 0.0005  # 0.0005 in origin paper but 0.0001 in tf-faster-rcnn
     lr_decay = 0.1  # 1e-3 -> 1e-4
     # lr = 1e-3
     lr1 = 1e-3  # extractor
@@ -40,7 +40,7 @@ class Config:
     # change lr
     milestone = [0, 1, 5, 10]
 
-
+    use_adam = False
 
     # debug
     debug_file = '/tmp/debugf'

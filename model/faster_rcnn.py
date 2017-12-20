@@ -66,16 +66,14 @@ class FasterRCNN(nn.Module):
     Region Proposal Networks. NIPS 2015.
 
     Args:
-        extractor (callable Chain): A callable that takes a BCHW image
+        extractor (nn.Module): A module that takes a BCHW image
             array and returns feature maps.
-        rpn (callable Chain): A callable that has the same interface as
+        rpn (nn.Module): A module that has the same interface as
             :class:`~chainercv.links.model.faster_rcnn.RegionProposalNetwork`.
             Please refer to the documentation found there.
-        head (callable Chain): A callable that takes
+        head (nn.Module): A callable that takes
             a BCHW array, RoIs and batch indices for RoIs. This returns class
             dependent localization paramters and class scores.
-        mean (numpy.ndarray): A value to be subtracted from an image
-            in :meth:`prepare`.
         loc_normalize_mean (tuple of four floats): Mean values of
             localization estimates.
         loc_normalize_std (tupler of four floats): Standard deviation
@@ -398,4 +396,17 @@ class FasterRCNN(nn.Module):
     def scale_lr(self, decay=0.1):
         for param_group in self.optimizer.param_groups:
             param_group['lr'] *= decay
+        return self.optimizer
+
+    def get_optimizer_adam(self):
+        lr = opt.lr1 *0.1
+        self.lr1 = lr
+        params = []
+        for key, value in dict(self.named_parameters()).items():
+            if value.requires_grad:
+                if 'bias' in key:
+                    params += [{'params': [value], 'lr': lr * 2, 'weight_decay': 0}]
+                else:
+                    params += [{'params': [value], 'lr': lr, 'weight_decay': opt.weight_decay}]
+        self.optimizer = t.optim.Adam(params)
         return self.optimizer
