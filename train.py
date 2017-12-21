@@ -62,6 +62,7 @@ def train(**kwargs):
         trainer.load(opt.load_path)
         print('load pretrained model from %s' % opt.load_path)
 
+    trainer.optimizer = trainer.faster_rcnn.get_great_optimizer()
     trainer.vis.text(dataset.db.label_names, win='labels')
     best_map = 0
     for epoch in range(opt.epoch):
@@ -98,7 +99,7 @@ def train(**kwargs):
                 trainer.vis.text(str(trainer.rpn_cm.value().tolist()), win='rpn_cm')
                 # roi confusion matrix
                 trainer.vis.img('roi_cm', at.totensor(trainer.roi_cm.conf, False).float())
-        if best_map>0.6: 
+        if best_map>0.6 and opt.test_num<5000: 
             opt.test_num=10000
             best_map = 0
         eval_result = eval(test_dataloader, faster_rcnn, test_num=opt.test_num)
@@ -106,9 +107,11 @@ def train(**kwargs):
         if eval_result['map'] > best_map:
             best_map = eval_result['map']
             best_path = trainer.save(best_map=best_map)
-        else:
+        if epoch==8:
             trainer.load(best_path)
             trainer.faster_rcnn.scale_lr(opt.lr_decay)
+        if epoch ==0:
+            trainer.optimizer = trainer.faster_rcnn.get_optimizer()
 
         trainer.vis.plot('test_map', eval_result['map'])
         lr_ = trainer.faster_rcnn.optimizer.param_groups[0]['lr']

@@ -42,6 +42,7 @@ class Config:
 
     use_adam = False
     use_chainer = False
+    use_drop = False
     # debug
     debug_file = '/tmp/debugf'
 

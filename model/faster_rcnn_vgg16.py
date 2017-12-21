@@ -15,9 +15,14 @@ def decom_vgg16(pretrained=True):
     model = vgg16(pretrained)
     features = list(model.features)[:30]
     classifier = model.classifier
-    # classifier = list(classifier)
-    # del the last layer
-    del classifier._modules['6']
+
+    classifier = list(classifier)
+    # delete dropout
+    del classifier[6]
+    if not opt.use_drop:
+        del classifier[5]
+        del classifier[2]
+    classifier = nn.Sequential(*classifier)
 
     # free top3 conv
     for layer in features[:10]:
