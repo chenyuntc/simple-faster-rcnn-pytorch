@@ -62,7 +62,7 @@ def train(**kwargs):
         trainer.load(opt.load_path)
         print('load pretrained model from %s' % opt.load_path)
 
-    trainer.optimizer = trainer.faster_rcnn.get_great_optimizer()
+    # trainer.optimizer = trainer.faster_rcnn.get_great_optimizer()
     trainer.vis.text(dataset.db.label_names, win='labels')
     best_map = 0
     for epoch in range(opt.epoch):
@@ -80,20 +80,20 @@ def train(**kwargs):
                 # plot loss
                 trainer.vis.plot_many(trainer.get_meter_data())
 
-                # plot groud truth bboxes
-                ori_img_ = (img * 0.225 + 0.45).clamp(min=0, max=1) * 255
-                gt_img = visdom_bbox(at.tonumpy(ori_img_)[0], 
-                                    at.tonumpy(bbox_)[0], 
-                                    label_[0].numpy())
-                trainer.vis.img('gt_img', gt_img)
+                # # plot groud truth bboxes
+                # ori_img_ = (img * 0.225 + 0.45).clamp(min=0, max=1) * 255
+                # gt_img = visdom_bbox(at.tonumpy(ori_img_)[0], 
+                #                     at.tonumpy(bbox_)[0], 
+                #                     label_[0].numpy())
+                # trainer.vis.img('gt_img', gt_img)
 
-                # plot predicti bboxes
-                _bboxes, _labels, _scores = trainer.faster_rcnn.predict(ori_img,visualize=True)
-                pred_img = visdom_bbox( at.tonumpy(ori_img[0]), 
-                                        at.tonumpy(_bboxes[0]),
-                                        at.tonumpy(_labels[0]).reshape(-1), 
-                                        at.tonumpy(_scores[0]))
-                trainer.vis.img('pred_img', pred_img)
+                # # plot predicti bboxes
+                # _bboxes, _labels, _scores = trainer.faster_rcnn.predict(ori_img,visualize=True)
+                # pred_img = visdom_bbox( at.tonumpy(ori_img[0]), 
+                #                         at.tonumpy(_bboxes[0]),
+                #                         at.tonumpy(_labels[0]).reshape(-1), 
+                #                         at.tonumpy(_scores[0]))
+                # trainer.vis.img('pred_img', pred_img)
 
                 # rpn confusion matrix(meter)
                 trainer.vis.text(str(trainer.rpn_cm.value().tolist()), win='rpn_cm')
@@ -110,8 +110,8 @@ def train(**kwargs):
         if epoch==8:
             trainer.load(best_path)
             trainer.faster_rcnn.scale_lr(opt.lr_decay)
-        if epoch ==0:
-            trainer.optimizer = trainer.faster_rcnn.get_optimizer()
+        # if epoch ==0:
+        #     trainer.optimizer = trainer.faster_rcnn.get_optimizer()
 
         trainer.vis.plot('test_map', eval_result['map'])
         lr_ = trainer.faster_rcnn.optimizer.param_groups[0]['lr']

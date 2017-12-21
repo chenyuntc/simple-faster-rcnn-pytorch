@@ -4,6 +4,7 @@ from skimage import transform as sktsf
 from torchvision import transforms as tvtsf
 from . import util
 from util import array_tool as at
+ 
 
 
 def preprocess(img, min_size=600, max_size=1000):
@@ -32,20 +33,13 @@ def preprocess(img, min_size=600, max_size=1000):
     scale = min(scale1, scale2)
     # both the longer and shorter should be less than
     # max_size and min_size
-    img = img / 256.
+    img = img / 255.
+    img = img[[2,1,0],:,:] #RGB-BGR
     img = sktsf.resize(img, (C, H * scale, W * scale), mode='reflect')
-    normalize = tvtsf.Normalize(mean=[0.485, 0.456, 0.406],
-                                std=[0.229, 0.224, 0.225])
-
-    img = normalize(t.from_numpy(img))
-    return img.numpy()
-    # unNOTE: original implementation in chainer:
-    # mean=np.array([122.7717, 115.9465, 102.9801],
-    # img = (img - self.mean).astype(np.float32, copy=False)
-    # Answer: https://github.com/pytorch/vision/issues/223
-    # the input of vgg16 in pytorch:
-    # rgb 0 to 1, instead of bgr 0 to 255
-
+    img = img*255
+    mean=np.array([122.7717, 115.9465, 102.9801]).reshape(3,1,1)
+    img = (img - mean).astype(np.float32, copy=True)
+    return img
 
 class Transform(object):
 

@@ -12,7 +12,8 @@ from config import opt
 
 def decom_vgg16(pretrained=True):
     # the 30th layer of features is relu of conv5_3
-    model = vgg16(pretrained)
+    model = vgg16(pretrained=False)
+    model.load_state_dict('/home/a/code/pytorch/faster-rcnn/pytorch-faster-rcnn/data/imagenet_weights/vgg16.pth')
     features = list(model.features)[:30]
     classifier = model.classifier
 
