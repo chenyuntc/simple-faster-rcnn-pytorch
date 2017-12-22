@@ -54,7 +54,6 @@ class ProposalCreator():
                  n_train_post_nms=2000,
                  n_test_pre_nms=6000,
                  n_test_post_nms=300,
-                 force_cpu_nms=False,
                  min_size=16
                  ):
         self.parent_model = parent_model
@@ -63,7 +62,6 @@ class ProposalCreator():
         self.n_train_post_nms = n_train_post_nms
         self.n_test_pre_nms = n_test_pre_nms
         self.n_test_post_nms = n_test_post_nms
-        self.force_cpu_nms = force_cpu_nms
         self.min_size = min_size
 
     def __call__(self, loc, score,

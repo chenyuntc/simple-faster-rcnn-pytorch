@@ -62,7 +62,7 @@ def train(**kwargs):
         trainer.load(opt.load_path)
         print('load pretrained model from %s' % opt.load_path)
 
-    trainer.optimizer = trainer.faster_rcnn.get_great_optimizer()
+    # trainer.optimizer = trainer.faster_rcnn.get_great_optimizer()
     trainer.vis.text(dataset.db.label_names, win='labels')
     best_map = 0
     for epoch in range(opt.epoch):
@@ -107,11 +107,11 @@ def train(**kwargs):
         if eval_result['map'] > best_map:
             best_map = eval_result['map']
             best_path = trainer.save(best_map=best_map)
-        if epoch==8:
-            trainer.load(best_path)
+        if epoch==9:
+            # trainer.load(best_path)
             trainer.faster_rcnn.scale_lr(opt.lr_decay)
-        if epoch ==0:
-            trainer.optimizer = trainer.faster_rcnn.get_optimizer()
+        # if epoch ==0:
+        #     trainer.optimizer = trainer.faster_rcnn.get_optimizer()
 
         trainer.vis.plot('test_map', eval_result['map'])
         lr_ = trainer.faster_rcnn.optimizer.param_groups[0]['lr']
