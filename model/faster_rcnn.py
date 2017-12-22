@@ -22,7 +22,6 @@ import torch as t
 import numpy as np
 import cupy as cp
 from util import array_tool as at
-# from chainercv.transforms.image.resize import resize
 from model.utils.bbox_tools import loc2bbox
 from model.utils.nms import non_maximum_suppression
 
@@ -234,7 +233,7 @@ class FasterRCNN(nn.Module):
                 prepared_imgs.append(img)
                 sizes.append(size)
         else:
-            img = prepared_imgs
+             prepared_imgs = imgs 
         bboxes = list()
         labels = list()
         scores = list()
