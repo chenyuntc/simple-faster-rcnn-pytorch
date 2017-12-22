@@ -120,7 +120,8 @@ def test_roi_module():
         neq = (cc != variable.data.cpu().numpy())
         assert neq.sum() == 0, 'test failed: %s' % info
 
-    # chainer version
+    # chainer version,if you're going to run this
+    # pip install chainer 
     import chainer.functions as F
     from chainer import Variable
     x_cn = Variable(t2c(x))
