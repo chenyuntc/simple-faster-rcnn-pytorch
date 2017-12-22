@@ -17,10 +17,10 @@ VGG16 train on trainval and test on test, Note, the training show great randomne
 |              Implementation              | mAP         |
 | :--------------------------------------: | ----------- |
 | [origin paper](https://arxiv.org/abs/1506.01497) | 0.699       |
-| using caffe pretrained model (enable with`--caffe-pretrain`) | 0.700-0.708 |
-|    using torchvision pretrained model    | 0.690-0.701 |
+| using caffe pretrained model (enable with`--caffe-pretrain`) | 0.702-0.712 |
+|    using torchvision pretrained model    | 0.693-0.701 |
 | model converted from [chainercv](https://github.com/chainer/chainercv/tree/master/examples/faster_rcnn) (reported 0.706) | 0.7053      |
-| current the best i've ever seen (ruotian's) | 0.711       |
+
 
 - Speed
 

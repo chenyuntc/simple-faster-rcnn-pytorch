@@ -213,7 +213,7 @@ class FasterRCNNTrainer(nn.Module):
         if 'model' in state_dict:
             self.faster_rcnn.load_state_dict(state_dict['model'])
         else:  # legacy way, for backward compatibility
-            self.load_state_dict(state_dict)
+            self.faster_rcnn.load_state_dict(state_dict)
             return self
         if parse_opt:
             opt._parse(state_dict['config'])
