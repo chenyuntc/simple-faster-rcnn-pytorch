@@ -101,13 +101,13 @@ def train(**kwargs):
                 trainer.vis.text(str(trainer.rpn_cm.value().tolist()), win='rpn_cm')
                 # roi confusion matrix
                 trainer.vis.img('roi_cm', at.totensor(trainer.roi_cm.conf, False).float())
-        if epoch<9:
-            continue
+        # if epoch<9:
+        #   continue
 
         eval_result = eval(test_dataloader, faster_rcnn, test_num=opt.test_num)
-
-        best_map = eval_result['map']
-        best_path = trainer.save(best_map=best_map)
+        if eval_result['map']>best_map:
+            best_map = eval_result['map']
+            best_path = trainer.save(best_map=best_map)
 
         if epoch ==9:
             trainer.faster_rcnn.scale_lr(opt.lr_decay)
@@ -118,7 +118,7 @@ def train(**kwargs):
                                             str(eval_result['map']), 
                                             str(trainer.get_meter_data()))
         trainer.vis.log(log_info)
-        if epoch == 14:break
+        if epoch == 19:break
         # t.save(trainer.state_dict(),'checkpoints/fasterrcnn_%s.pth' %epoch)
         # t.vis.save([opt.env])
 

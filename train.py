@@ -107,7 +107,7 @@ def train(**kwargs):
         if eval_result['map'] > best_map:
             best_map = eval_result['map']
             best_path = trainer.save(best_map=best_map)
-        if epoch==8:
+        if epoch==10:
             trainer.load(best_path)
             trainer.faster_rcnn.scale_lr(opt.lr_decay)
         # if epoch ==0:
