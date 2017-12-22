@@ -12,8 +12,14 @@ from config import opt
 
 def decom_vgg16(pretrained=True):
     # the 30th layer of features is relu of conv5_3
-    model = vgg16(pretrained=False)
-    model.load_state_dict(t.load('/home/a/code/pytorch/faster-rcnn/pytorch-faster-rcnn/data/imagenet_weights/vgg16.pth'))
+
+    if opt.caffe_pretrain:
+        model = vgg16(pretrained=False)
+        if not opt.load_path:
+            model.load_state_dict(t.load(opt.caffe_pretrain_path))
+    else:
+        model = vgg16(not opt.load_path)
+
     features = list(model.features)[:30]
     classifier = model.classifier
 
@@ -139,8 +145,10 @@ class FasterRCNNVGG16(FasterRCNN):
                  ratios=[0.5, 1, 2], anchor_scales=[8, 16, 32]
                  ):
                  
-        if opt.use_chainer:decom = decom_vgg16_chainer
-        else: decom = decom_vgg16
+        if opt.use_chainer:
+            decom = decom_vgg16_chainer
+        else: 
+            decom = decom_vgg16
         extractor, classifier = decom(not opt.load_path)
 
         rpn = RegionProposalNetwork(

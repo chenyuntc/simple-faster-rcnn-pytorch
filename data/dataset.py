@@ -4,9 +4,36 @@ from skimage import transform as sktsf
 from torchvision import transforms as tvtsf
 from . import util
 import numpy as np
+from config import opt
 from util import array_tool as at
- 
 
+
+def inverse_normalize(img):
+    if opt.caffe_pretrain:
+        img = img + (np.array([122.7717, 115.9465, 102.9801]).reshape(3,1,1))
+        return img[::-1, :, :]
+    # approximate un-normalize for visualize
+    return (img*0.225+0.45).clip(min=0,max=1)*255
+
+def pytorch_normalze(img):
+    """
+    https://github.com/pytorch/vision/issues/223
+    return appr -1~1 RGB
+    """
+    normalize = tvtsf.Normalize(mean=[0.485, 0.456, 0.406],
+                                    std=[0.229, 0.224, 0.225])
+    img = normalize(t.from_numpy(img))
+    return img.numpy()
+
+def caffe_normalize(img):
+    """
+    return appr -125-125 BGR
+    """
+    img = img[[2,1,0],:,:] #RGB-BGR
+    img = img*255
+    mean=np.array([122.7717, 115.9465, 102.9801]).reshape(3,1,1)
+    img = (img - mean).astype(np.float32, copy=True)
+    return img
 
 def preprocess(img, min_size=600, max_size=1000):
     """Preprocess an image for feature extraction.
@@ -32,15 +59,15 @@ def preprocess(img, min_size=600, max_size=1000):
     scale1 = min_size / min(H, W)
     scale2 = max_size / max(H, W)
     scale = min(scale1, scale2)
+    img = img / 255.
+    img = sktsf.resize(img, (C, H * scale, W * scale), mode='reflect')
     # both the longer and shorter should be less than
     # max_size and min_size
-    img = img / 255.
-    img = img[[2,1,0],:,:] #RGB-BGR
-    img = sktsf.resize(img, (C, H * scale, W * scale), mode='reflect')
-    img = img*255
-    mean=np.array([122.7717, 115.9465, 102.9801]).reshape(3,1,1)
-    img = (img - mean).astype(np.float32, copy=True)
-    return img
+    if opt.caffe_pretrain:
+        normalize = caffe_normalize
+    else:
+        normalize = pytorch_normalze
+    return normalize(img)
 
 class Transform(object):
 
@@ -77,7 +104,7 @@ class Dataset():
         img, bbox, label, scale = self.tsf((ori_img, bbox, label))
         # TODO: check whose stride is negative to fix this instead copy all
         # some of the strides of a given numpy array are negative.
-        return img.copy(), bbox.copy(), label.copy(), scale, ori_img
+        return img.copy(), bbox.copy(), label.copy(), scale
 
     def __len__(self):
         return len(self.db)

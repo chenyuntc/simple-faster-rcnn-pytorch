@@ -50,6 +50,9 @@ class Config:
     # model
     load_path = None  # '/mnt/3/rpn.pth'
 
+    caffe_pretrain = False
+    caffe_pretrain_path = 'checkpoints/vgg16-caffe.pth'
+
     def _parse(self, kwargs):
         state_dict = self._state_dict()
         for k, v in kwargs.items():
