@@ -3,8 +3,8 @@ import numpy as np
 from chainer import cuda
 
 from torch import nn
-from .bbox_tools import loc2bbox
-from .nms import non_maximum_suppression
+from model.utils.bbox_tools import loc2bbox
+from model.utils.nms import non_maximum_suppression
 
 
 class ProposalCreator():
