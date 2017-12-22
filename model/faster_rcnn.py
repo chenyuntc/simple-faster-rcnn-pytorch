@@ -233,7 +233,8 @@ class FasterRCNN(nn.Module):
                 img = preprocess(at.tonumpy(img))
                 prepared_imgs.append(img)
                 sizes.append(size)
-
+        else:
+            img = prepared_imgs
         bboxes = list()
         labels = list()
         scores = list()
