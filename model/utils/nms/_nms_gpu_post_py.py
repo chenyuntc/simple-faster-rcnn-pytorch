@@ -6,7 +6,8 @@ def _nms_gpu_post( mask,
                    threads_per_block,
                    col_blocks
                   ):
-
+    n_selection = 0
+    one_ull = np.array([1],dtype=np.uint64)
     selection = np.zeros((n_bbox,), dtype=np.int32)
     remv = np.zeros((col_blocks,), dtype=np.uint64)
 
