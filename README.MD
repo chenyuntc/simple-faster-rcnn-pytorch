@@ -1,12 +1,12 @@
-# A Pythonic, Simple and Fast Implementation of Faster RCNN
+# A Simple and Fast Implementation of Faster R-CNN
 
 ##  Introduction
 
-This project is a **Simplified** Faster RCNN implementation based on [chainercv](https://github.com/chainer/chainercv) and other [projects](#Acknowledgement) . It aims to:
+This project is a **Simplified** Faster R-CNN implementation based on [chainercv](https://github.com/chainer/chainercv) and other [projects](#Acknowledgement) . It aims to:
 
 - Simplify the code (*Simple is better than complex*)
 - Make the code more straightforward (*Flat is better than nested*)
-- Match the performance reported in [ origin paper](https://arxiv.org/abs/1506.01497) (*Speed Counts and mAP Matters*)
+- Match the performance reported in [origin paper](https://arxiv.org/abs/1506.01497) (*Speed Counts and mAP Matters*)
 
 ##  Performance
 
@@ -14,7 +14,7 @@ This project is a **Simplified** Faster RCNN implementation based on [chainercv]
 
 VGG16 train on `trainval` and test on `test` split. 
 
-**Note**: the training shows great randomness, you may need to train more epoch and a bit of luck to reach the highest mAP. However, it should be easy to surpass the lower bound. 
+**Note**: the training shows great randomness, you may need a bit of luck and more epoches of training to reach the highest mAP. However, it should be easy to surpass the lower bound. 
 
 |              Implementation              |     mAP     |
 | :--------------------------------------: | :---------: |
@@ -57,14 +57,14 @@ If you're in China and have encounter problem with visdom (i.e. timeout, blank s
 
 ## Demo
 
-Download pretrained model from [google drive](https://drive.google.com/open?id=1cQ27LIn-Rig4-Uayzy_gH5-cW-NRGVzY).
+Download pretrained model from [Google Drive](https://drive.google.com/open?id=1cQ27LIn-Rig4-Uayzy_gH5-cW-NRGVzY).
 
 
-See [demo.ipynb](https://github.com/chenyuntc/Simplified-FasterRCNN/blob/master/demo.ipynb) for more detail.
+See [demo.ipynb](https://github.com/chenyuntc/simple-faster-rcnn-pytorch/blob/master/demo.ipynb) for more detail.
 
 ## Train
 
-### Data
+### Prepare data
 
 #### Pascal VOC2007
 
@@ -99,7 +99,7 @@ See [demo.ipynb](https://github.com/chenyuntc/Simplified-FasterRCNN/blob/master/
 
 TBD
 
-### preprare caffe-pretrained vgg16
+### Prepare caffe-pretrained vgg16
 
 If you want to use caffe-pretrain model as initial weight, you can run below to get vgg16 weights converted from caffe, which is the same as the origin paper use.
 
@@ -107,7 +107,7 @@ If you want to use caffe-pretrain model as initial weight, you can run below to 
 python misc/convert_caffe_pretrain.py
 ````
 
-This would download pretrained model and converted it to the format compatible with torchvision. 
+This scripts would download pretrained model and converted it to the format compatible with torchvision. 
 
 Then you should specify where caffe-pretraind model `vgg16_caffe.pth` stored in `config.py` by setting `caffe_pretrain_path`
 
@@ -120,7 +120,7 @@ If you want to use torchvision pretrained model, you may skip this step.
 ### begin training
 
 ```Bash
-make checkpoints/ # make dir for storing snapshots
+mkdir checkpoints/ # folder for snapshots
 ```
 
 ```bash
@@ -139,6 +139,9 @@ Some Key arguments:
 - `--use-Adam`: use Adam instead of SGD, default SGD. (You need set a very low `lr` for Adam)
 - `--load-path`: pretrained model path, default `None`, if it's specified, the pretrained model would be loaded.
 
+
+you may open browser, type:`http://<ip>:8097` and see the visualization of training procedure as below:
+![visdom](http://7zh43r.com1.z0.glb.clouddn.com/del/visdom-fasterrcnn.png) 
 ## Troubleshooting
 
 TODO: make it clear
@@ -153,8 +156,9 @@ TODO: make it clear
 - [ ] training on coco
 - [ ] resnet
 - [ ] replace cupy with THTensor+cffi?
+- [ ] Convert all numpy code to tensor?
 
-## Acknowledge
+## Acknowledgement
 This work builds on many excellent works, which include:
 
 - [Yusuke Niitani's ChainerCV](https://github.com/chainer/chainercv) (mainly)
