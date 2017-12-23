@@ -8,6 +8,14 @@ This project is a **Simplified** Faster R-CNN implementation based on [chainercv
 - Make the code more straightforward (*Flat is better than nested*)
 - Match the performance reported in [origin paper](https://arxiv.org/abs/1506.01497) (*Speed Counts and mAP Matters*)
 
+And it has the following features:
+- It can be run as pure Python code, no more build affair. (cuda code moves to cupy, Cython acceleration are optional)
+- It's a minimal implemention in around 2000 lines valid code with a lot of comment and instruction.(thanks to chainercv's excellent documentation)
+- It achieves higher mAP than the origin implementation (0.712 VS 0.699)
+- It achieve performance compariable with other implementation (6fps and 12fps for train and test in TITAN XP with cython)
+- It's memory-efficient (about 3GB for vgg16)
+
+
 ##  Performance
 
 ### mAP
@@ -29,27 +37,34 @@ VGG16 train on `trainval` and test on `test` split.
 | :--------------------------------------: | :------: | :-------: | :--------: |
 | [origin paper](https://arxiv.org/abs/1506.01497) |   K40    |   5 fps   |     NA     |
 |                 This[^1]                 | TITAN Xp |  12 fps   |  5-6 fps   |
-| [pytorch-faster-rcnn](https://github.com/ruotianluo/pytorch-faster-rcnn) | TITAN Xp |    NA     |   5-6fps   |
+| [pytorch-faster-rcnn](https://github.com/ruotianluo/pytorch-faster-rcnn) | TITAN Xp |    NA     |    6fps    |
 
 [^1]: make sure you install cupy correctly and only one program run on the GPU.
+It could be even faster by removing visualization, logging, averaging loss etc.
 ## Install dependencies
 
 requires python3 and PyTorch 0.3
 
 - install PyTorch >=0.3 with GPU (code are GPU-only), refer to [official website](http://pytorch.org)
+
 - install cupy, you can install via `pip install` but it's better to read the [docs](https://docs-cupy.chainer.org/en/latest/install.html#install-cupy-with-cudnn-and-nccl) and make sure the environ is correctly set
 
-
 - install other dependencies:  `pip install -r requirements.txt `
-- build `nms_gpu_post`: `cd model/utils/nms/; python3 build.py build_ext --inplace`
-- start vidom for visualize
 
+- Optional, but strongly recommended: build cython code `nms_gpu_post`: 
+
+  ```Python
+  cd model/utils/nms/
+  python3 build.py build_ext --inplace
+  ```
+
+- start vidom for visualize
 
 ```
 nohup python3 -m visdom.server &
 ```
 
-If you're in China and have encounter problem with visdom (i.e. timeout, blank screen), you may refer to [visdom issue](https://github.com/facebookresearch/visdom/issues/111#issuecomment-321743890), ~~and a temporary solution provided by me~~
+If you're in China and have encounter problem with visdom (i.e. timeout, blank screen), you may refer to [visdom issue](https://github.com/facebookresearch/visdom/issues/111#issuecomment-321743890), ~~and a temporary and fast solution provided by me~~
 
 ## Demo
 
@@ -111,7 +126,7 @@ If you want to use torchvision pretrained model, you may skip this step.
 
 **NOTE**, caffe pretrained model has shown slight better performance.
 
-**NOTE**: caffe model require images in BGR 0-255, while torchvision model requires images in RGB and 0-1. See `data/dataset.py`for more detail.
+**NOTE**: caffe model require images in BGR 0-255, while torchvision model requires images in RGB and 0-1. See `data/dataset.py`for more detail. 
 
 ### begin training
 
@@ -127,7 +142,7 @@ you may refer to `config.py` for more argument.
 
 Some Key arguments:
 
-- `--caffe-pretrain`=True: use caffe pretrain model  or use torchvision pretrained model (Default: torchvison)
+- `--caffe-pretrain`: use caffe pretrain model  or use torchvision pretrained model (Default: torchvison)
 - `--plot-every=n`: visualize predict, loss etc every n batches.
 - `--env`: visdom env for visualization
 - `--voc_data_dir`: where the VOC data stored
