@@ -2,7 +2,10 @@ from __future__ import division
 import numpy as np
 import cupy as cp
 import torch as t
-from ._nms_gpu_post import _nms_gpu_post
+try:
+    from ._nms_gpu_post import _nms_gpu_post
+except:
+    from ._nms_gpu_post_py import _nms_gpu_post
 
 
 @cp.util.memoize(for_each_device=True)

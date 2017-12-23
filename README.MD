@@ -25,17 +25,13 @@ VGG16 train on `trainval` and test on `test` split.
 
 ### Speed
 
-|              Implementation              |   GPU    |  Inference  | Trainining  |
-| :--------------------------------------: | :------: | :---------: | :---------: |
-| [origin paper](https://arxiv.org/abs/1506.01497) |   K40    |    5 fps    |     NA      |
-|                   This                   | TITAN Xp | 12 fps [^1] | 5-6 fps[^2] |
-| [pytorch-faster-rcnn](https://github.com/ruotianluo/pytorch-faster-rcnn) | TITAN Xp |     NA      |   5-6fps    |
+|              Implementation              |   GPU    | Inference | Trainining |
+| :--------------------------------------: | :------: | :-------: | :--------: |
+| [origin paper](https://arxiv.org/abs/1506.01497) |   K40    |   5 fps   |     NA     |
+|                 This[^1]                 | TITAN Xp |  12 fps   |  5-6 fps   |
+| [pytorch-faster-rcnn](https://github.com/ruotianluo/pytorch-faster-rcnn) | TITAN Xp |    NA     |   5-6fps   |
 
-[^1]: include reading images from disk, preprocessing, etc. see `eval` in `train.py` for more detail.
-[^2]: it depends on the e
-
-**NOTE** you should make sure you install cupy correctly to reach the benchmark.
-
+[^1]: make sure you install cupy correctly and only one program run on the GPU.
 ## Install dependencies
 
 requires python3 and PyTorch 0.3
@@ -151,7 +147,7 @@ TODO: make it clear
 - cupy
 - vgg
 
-## TODO
+## More
 
 - [ ] training on coco
 - [ ] resnet
@@ -166,6 +162,8 @@ This work builds on many excellent works, which include:
 - [faster-rcnn.pytorch by Jianwei Yang and Jiasen Lu](https://github.com/jwyang/faster-rcnn.pytorch).It's mainly based on [longcw's faster_rcnn_pytorch](https://github.com/longcw/faster_rcnn_pytorch)
 - All the above Repositories have referred to [py-faster-rcnn by Ross Girshick and Sean Bell](https://github.com/rbgirshick/py-faster-rcnn)  either directly or indirectly. 
 
-## LICENSE
-
-MIT, see the LICENSE for more detail.
+## other
+licensed in MIT, see the LICENSE for more detail.
+Contribution Welcome.
+If you encounter any problem, feel free to open an issue.
+Correct me if anything is wrong or unclear.
