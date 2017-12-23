@@ -92,6 +92,7 @@ class FasterRCNN(nn.Module):
         # mean and std
         self.loc_normalize_mean = loc_normalize_mean
         self.loc_normalize_std = loc_normalize_std
+        self.use_preset('evaluate')
 
     @property
     def n_class(self):
