@@ -12,6 +12,7 @@ class Config:
     min_size = 600
     max_size = 1000
     num_workers = 8
+    test_num_workers = 8
 
     # sigma for l1_smooth_loss
     rpn_sigma = 3.

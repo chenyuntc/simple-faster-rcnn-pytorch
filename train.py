@@ -57,9 +57,9 @@ def train(**kwargs):
     testset = TestDataset(opt)
     test_dataloader = data_.DataLoader(testset,
                                        batch_size=1,
-                                       num_workers=2,
+                                       num_workers=opt.test_num_workers,
                                        shuffle=False, \
-                                       # pin_memory=True
+                                       pin_memory=True
                                        )
     faster_rcnn = FasterRCNNVGG16()
     print('model construct completed')
@@ -105,15 +105,15 @@ def train(**kwargs):
                 trainer.vis.text(str(trainer.rpn_cm.value().tolist()), win='rpn_cm')
                 # roi confusion matrix
                 trainer.vis.img('roi_cm', at.totensor(trainer.roi_cm.conf, False).float())
-        if best_map>0.6 and opt.test_num<5000: 
-            opt.test_num=10000
-            best_map = 0
+        # if best_map>0.6 and opt.test_num<5000: 
+        #     opt.test_num=10000
+        #     best_map = 0
         eval_result = eval(test_dataloader, faster_rcnn, test_num=opt.test_num)
 
         if eval_result['map'] > best_map:
             best_map = eval_result['map']
             best_path = trainer.save(best_map=best_map)
-        if epoch==10:
+        if epoch==9:
             trainer.load(best_path)
             trainer.faster_rcnn.scale_lr(opt.lr_decay)
         # if epoch ==0:
@@ -127,6 +127,7 @@ def train(**kwargs):
         trainer.vis.log(log_info)
         # t.save(trainer.state_dict(),'checkpoints/fasterrcnn_%s.pth' %epoch)
         # t.vis.save([opt.env])
+        if epoch == 13: break
 
 
 if __name__ == '__main__':
