@@ -2,7 +2,7 @@
 
 ##  Introduction
 
-This project is a **Simplified** Faster R-CNN implementation based on [chainercv](https://github.com/chainer/chainercv) and other [projects](#Acknowledgement) . It aims to:
+This project is a **Simplified** Faster R-CNN implementation based on [chainercv](https://github.com/chainer/chainercv) and other [projects](#acknowledgement) . It aims to:
 
 - Simplify the code (*Simple is better than complex*)
 - Make the code more straightforward (*Flat is better than nested*)
@@ -12,8 +12,12 @@ And it has the following features:
 - It can be run as pure Python code, no more build affair. (cuda code moves to cupy, Cython acceleration are optional)
 - It's a minimal implemention in around 2000 lines valid code with a lot of comment and instruction.(thanks to chainercv's excellent documentation)
 - It achieves higher mAP than the origin implementation (0.712 VS 0.699)
-- It achieve performance compariable with other implementation (6fps and 12fps for train and test in TITAN XP with cython)
+- It achieve speed compariable with other implementation (6fps and 12fps for train and test in TITAN XP with cython)
 - It's memory-efficient (about 3GB for vgg16)
+
+
+![img](http://7zh43r.com1.z0.glb.clouddn.com/del/faster-speed.jpg)
+
 
 
 ##  Performance
@@ -27,7 +31,7 @@ VGG16 train on `trainval` and test on `test` split.
 |              Implementation              |     mAP     |
 | :--------------------------------------: | :---------: |
 | [origin paper](https://arxiv.org/abs/1506.01497) |    0.699    |
-|    train with caffe pretrained model     | 0.701-0.712 |
+|    train with caffe pretrained model     | 0.700-0.712 |
 | train with torchvision pretrained model  | 0.685-0.701 |
 | model converted from [chainercv](https://github.com/chainer/chainercv/tree/master/examples/faster_rcnn) (reported 0.706) |   0.7053    |
 
@@ -36,7 +40,7 @@ VGG16 train on `trainval` and test on `test` split.
 |              Implementation              |   GPU    | Inference | Trainining |
 | :--------------------------------------: | :------: | :-------: | :--------: |
 | [origin paper](https://arxiv.org/abs/1506.01497) |   K40    |   5 fps   |     NA     |
-|                 This[^1]                 | TITAN Xp |  12 fps   |  5-6 fps   |
+|                 This[^1]                 | TITAN Xp |  14 fps   |  5-6 fps   |
 | [pytorch-faster-rcnn](https://github.com/ruotianluo/pytorch-faster-rcnn) | TITAN Xp |    NA     |    6fps    |
 
 [^1]: make sure you install cupy correctly and only one program run on the GPU.
@@ -178,7 +182,10 @@ This work builds on many excellent works, which include:
 - All the above Repositories have referred to [py-faster-rcnn by Ross Girshick and Sean Bell](https://github.com/rbgirshick/py-faster-rcnn)  either directly or indirectly. 
 
 ## other
-licensed in MIT, see the LICENSE for more detail.
+Licensed under MIT, see the LICENSE for more detail.
+
 Contribution Welcome.
+
 If you encounter any problem, feel free to open an issue.
+
 Correct me if anything is wrong or unclear.
