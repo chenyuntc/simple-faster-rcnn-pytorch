@@ -12,7 +12,7 @@ And it has the following features:
 - It can be run as pure Python code, no more build affair. (cuda code moves to cupy, Cython acceleration are optional)
 - It's a minimal implemention in around 2000 lines valid code with a lot of comment and instruction.(thanks to chainercv's excellent documentation)
 - It achieves higher mAP than the origin implementation (0.712 VS 0.699)
-- It achieve speed compariable with other implementation (6fps and 12fps for train and test in TITAN XP with cython)
+- It achieve speed compariable with other implementation (6fps and 14fps for train and test in TITAN XP with cython)
 - It's memory-efficient (about 3GB for vgg16)
 
 
@@ -40,10 +40,10 @@ VGG16 train on `trainval` and test on `test` split.
 |              Implementation              |   GPU    | Inference | Trainining |
 | :--------------------------------------: | :------: | :-------: | :--------: |
 | [origin paper](https://arxiv.org/abs/1506.01497) |   K40    |   5 fps   |     NA     |
-|                 This[^1]                 | TITAN Xp |  14 fps   |  5-6 fps   |
-| [pytorch-faster-rcnn](https://github.com/ruotianluo/pytorch-faster-rcnn) | TITAN Xp |    NA     |    6fps    |
+|                 This[^1]                 | TITAN Xp |  14-15 fps   |  6 fps   |
+| [pytorch-faster-rcnn](https://github.com/ruotianluo/pytorch-faster-rcnn) | TITAN Xp |    15-17fps     |    6fps    |
 
-[^1]: make sure you install cupy correctly and only one program run on the GPU.
+[^1]: make sure you install cupy correctly and only one program run on the GPU. The training speed is sensitive to your gpu status. Moreever it's slow in the start of the program.
 It could be even faster by removing visualization, logging, averaging loss etc.
 ## Install dependencies
 
