@@ -57,14 +57,14 @@ requires python3 and PyTorch 0.3
 
 - Optional, but strongly recommended: build cython code `nms_gpu_post`: 
 
-  ```Python
+  ```Bash
   cd model/utils/nms/
   python3 build.py build_ext --inplace
   ```
 
 - start vidom for visualize
 
-```
+```Bash
 nohup python3 -m visdom.server &
 ```
 
@@ -85,7 +85,7 @@ See [demo.ipynb](https://github.com/chenyuntc/simple-faster-rcnn-pytorch/blob/ma
 
 1. Download the training, validation, test data and VOCdevkit
 
-   ```
+   ```Bash
    wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
    wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar
    wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCdevkit_08-Jun-2007.tar
@@ -93,7 +93,7 @@ See [demo.ipynb](https://github.com/chenyuntc/simple-faster-rcnn-pytorch/blob/ma
 
 2. Extract all of these tars into one directory named `VOCdevkit`
 
-   ```
+   ```Bash
    tar xvf VOCtrainval_06-Nov-2007.tar
    tar xvf VOCtest_06-Nov-2007.tar
    tar xvf VOCdevkit_08-Jun-2007.tar
@@ -101,7 +101,7 @@ See [demo.ipynb](https://github.com/chenyuntc/simple-faster-rcnn-pytorch/blob/ma
 
 3. It should have this basic structure
 
-   ```
+   ```Bash
    $VOCdevkit/                           # development kit
    $VOCdevkit/VOCcode/                   # VOC utility code
    $VOCdevkit/VOC2007                    # image sets, annotations, etc.
@@ -118,7 +118,7 @@ TBD
 
 If you want to use caffe-pretrain model as initial weight, you can run below to get vgg16 weights converted from caffe, which is the same as the origin paper use.
 
-````
+````Bash
 python misc/convert_caffe_pretrain.py
 ````
 
@@ -156,7 +156,7 @@ Some Key arguments:
 
 
 you may open browser, type:`http://<ip>:8097` and see the visualization of training procedure as below:
-![visdom](http://7zh43r.com1.z0.glb.clouddn.com/del/visdom-fasterrcnn.png) 
+![visdom](http://7zh43r.com2.z0.glb.clouddn.com/del/visdom-fasterrcnn.png) 
 ## Troubleshooting
 
 TODO: make it clear
