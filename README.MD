@@ -12,7 +12,7 @@ And it has the following features:
 - It can be run as pure Python code, no more build affair. (cuda code moves to cupy, Cython acceleration are optional)
 - It's a minimal implemention in around 2000 lines valid code with a lot of comment and instruction.(thanks to chainercv's excellent documentation)
 - It achieves higher mAP than the origin implementation (0.712 VS 0.699)
-- It achieve speed compariable with other implementation (6fps and 12fps for train and test in TITAN XP with cython)
+- It achieve speed compariable with other implementation (6fps and 14fps for train and test in TITAN XP with cython)
 - It's memory-efficient (about 3GB for vgg16)
 
 
@@ -40,10 +40,10 @@ VGG16 train on `trainval` and test on `test` split.
 |              Implementation              |   GPU    | Inference | Trainining |
 | :--------------------------------------: | :------: | :-------: | :--------: |
 | [origin paper](https://arxiv.org/abs/1506.01497) |   K40    |   5 fps   |     NA     |
-|                 This[^1]                 | TITAN Xp |  14 fps   |  5-6 fps   |
-| [pytorch-faster-rcnn](https://github.com/ruotianluo/pytorch-faster-rcnn) | TITAN Xp |    NA     |    6fps    |
+|                 This[^1]                 | TITAN Xp |  14-15 fps   |  6 fps   |
+| [pytorch-faster-rcnn](https://github.com/ruotianluo/pytorch-faster-rcnn) | TITAN Xp |    15-17fps     |    6fps    |
 
-[^1]: make sure you install cupy correctly and only one program run on the GPU.
+[^1]: make sure you install cupy correctly and only one program run on the GPU. The training speed is sensitive to your gpu status. Moreever it's slow in the start of the program.
 It could be even faster by removing visualization, logging, averaging loss etc.
 ## Install dependencies
 
@@ -57,14 +57,14 @@ requires python3 and PyTorch 0.3
 
 - Optional, but strongly recommended: build cython code `nms_gpu_post`: 
 
-  ```Python
+  ```Bash
   cd model/utils/nms/
   python3 build.py build_ext --inplace
   ```
 
 - start vidom for visualize
 
-```
+```Bash
 nohup python3 -m visdom.server &
 ```
 
@@ -85,7 +85,7 @@ See [demo.ipynb](https://github.com/chenyuntc/simple-faster-rcnn-pytorch/blob/ma
 
 1. Download the training, validation, test data and VOCdevkit
 
-   ```
+   ```Bash
    wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
    wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar
    wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCdevkit_08-Jun-2007.tar
@@ -93,7 +93,7 @@ See [demo.ipynb](https://github.com/chenyuntc/simple-faster-rcnn-pytorch/blob/ma
 
 2. Extract all of these tars into one directory named `VOCdevkit`
 
-   ```
+   ```Bash
    tar xvf VOCtrainval_06-Nov-2007.tar
    tar xvf VOCtest_06-Nov-2007.tar
    tar xvf VOCdevkit_08-Jun-2007.tar
@@ -101,7 +101,7 @@ See [demo.ipynb](https://github.com/chenyuntc/simple-faster-rcnn-pytorch/blob/ma
 
 3. It should have this basic structure
 
-   ```
+   ```Bash
    $VOCdevkit/                           # development kit
    $VOCdevkit/VOCcode/                   # VOC utility code
    $VOCdevkit/VOC2007                    # image sets, annotations, etc.
@@ -118,7 +118,7 @@ TBD
 
 If you want to use caffe-pretrain model as initial weight, you can run below to get vgg16 weights converted from caffe, which is the same as the origin paper use.
 
-````
+````Bash
 python misc/convert_caffe_pretrain.py
 ````
 
@@ -156,7 +156,7 @@ Some Key arguments:
 
 
 you may open browser, type:`http://<ip>:8097` and see the visualization of training procedure as below:
-![visdom](http://7zh43r.com1.z0.glb.clouddn.com/del/visdom-fasterrcnn.png) 
+![visdom](http://7zh43r.com2.z0.glb.clouddn.com/del/visdom-fasterrcnn.png) 
 ## Troubleshooting
 
 TODO: make it clear
@@ -181,7 +181,7 @@ This work builds on many excellent works, which include:
 - [faster-rcnn.pytorch by Jianwei Yang and Jiasen Lu](https://github.com/jwyang/faster-rcnn.pytorch).It's mainly based on [longcw's faster_rcnn_pytorch](https://github.com/longcw/faster_rcnn_pytorch)
 - All the above Repositories have referred to [py-faster-rcnn by Ross Girshick and Sean Bell](https://github.com/rbgirshick/py-faster-rcnn)  either directly or indirectly. 
 
-## other
+## ^_^
 Licensed under MIT, see the LICENSE for more detail.
 
 Contribution Welcome.
@@ -189,3 +189,7 @@ Contribution Welcome.
 If you encounter any problem, feel free to open an issue.
 
 Correct me if anything is wrong or unclear.
+
+model structure
+![img](http://7zh43r.com2.z0.glb.clouddn.com/del/faster-rcnn-model.svg)
+
