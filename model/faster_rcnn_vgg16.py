@@ -1,8 +1,6 @@
-import numpy as np
 import torch as t
 from torch import nn
-from torch.nn import functional as F
-from torchvision.models import vgg16, vgg16_bn
+from torchvision.models import vgg16
 from .region_proposal_network import RegionProposalNetwork
 from .faster_rcnn import FasterRCNN
 from .ROIModule import ROIPooling2D
@@ -10,9 +8,8 @@ from util import array_tool as at
 from config import opt
 
 
-def decom_vgg16(pretrained=True):
+def decom_vgg16():
     # the 30th layer of features is relu of conv5_3
-
     if opt.caffe_pretrain:
         model = vgg16(pretrained=False)
         if not opt.load_path:
@@ -24,56 +21,14 @@ def decom_vgg16(pretrained=True):
     classifier = model.classifier
 
     classifier = list(classifier)
-    # delete dropout
     del classifier[6]
     if not opt.use_drop:
         del classifier[5]
         del classifier[2]
     classifier = nn.Sequential(*classifier)
 
-    # free top3 conv
+    # freeze top4 conv
     for layer in features[:10]:
-        for p in layer.parameters():
-            p.requires_grad = False
-
-    return nn.Sequential(*features), classifier
-
-
-def decom_vgg16_chainer(pretrained=True):
-    # the 30th layer of features is relu of conv5_3
-    model = vgg16(pretrained)
-    features = list(model.features)[:30]
-    classifier = model.classifier
-    classifier = list(classifier)
-    # delete dropout
-    del classifier[6]
-    del classifier[5]
-    del classifier[2]
-    classifier = nn.Sequential(*classifier)
-
-    # chainer ceil mode = True for maxpooling
-    # for idx in [4,9,16,23]:
-    #     features[idx].ceil_mode=True
-    # 
-    # del classifier._modules['6']
-
-    # 冻结前几层的卷积
-    # for layer in features[:10]:
-    #     for p in layer.parameters():
-    #         p.requires_grad=False
-
-    return nn.Sequential(*features), classifier
-
-
-def decom_vgg16bn(pretrained=True):
-    # the 30th layer of features is relu of conv5_3
-    model = vgg16_bn(pretrained)
-    features = list(model.features)[:43]
-    classifier = model.classifier
-    del classifier._modules['6']
-
-    # 冻结前几层的卷积
-    for layer in features[:13]:
         for p in layer.parameters():
             p.requires_grad = False
 
@@ -141,15 +96,11 @@ class FasterRCNNVGG16(FasterRCNN):
 
     def __init__(self,
                  n_fg_class=20,
-                 min_size=600, max_size=1000,
-                 ratios=[0.5, 1, 2], anchor_scales=[8, 16, 32]
+                 ratios=[0.5, 1, 2],
+                 anchor_scales=[8, 16, 32]
                  ):
                  
-        if opt.use_chainer:
-            decom = decom_vgg16_chainer
-        else: 
-            decom = decom_vgg16
-        extractor, classifier = decom(not opt.load_path)
+        extractor, classifier = decom_vgg16()
 
         rpn = RegionProposalNetwork(
             512, 512,
@@ -192,10 +143,8 @@ class VGG16RoIHead(nn.Module):
                  classifier):
         # n_class includes the background
         super(VGG16RoIHead, self).__init__()
-        # NOTE： 这里初始化的方式都被我修改，使用默认的初始化方式
 
         self.classifier = classifier
-        # NOTE: chainer的实现方式中没有dropout
         self.cls_loc = nn.Linear(4096, n_class * 4)
         self.score = nn.Linear(4096, n_class)
 
@@ -228,8 +177,7 @@ class VGG16RoIHead(nn.Module):
         roi_indices = at.totensor(roi_indices).float()
         rois = at.totensor(rois).float()
         indices_and_rois = t.cat([roi_indices[:, None], rois], dim=1)
-        # indices_and_rois = t.autograd.Variable(indices_and_rois)
-        # NOTE: important you forgot it:
+        # NOTE: important: yx->xy
         xy_indices_and_rois = indices_and_rois[:, [0, 2, 1, 4, 3]]
         indices_and_rois = t.autograd.Variable(xy_indices_and_rois.contiguous())
 

@@ -62,7 +62,6 @@ def train(**kwargs):
         trainer.load(opt.load_path)
         print('load pretrained model from %s' % opt.load_path)
 
-    # trainer.optimizer = trainer.faster_rcnn.get_great_optimizer()
     trainer.vis.text(dataset.db.label_names, win='labels')
     best_map = 0
     for epoch in range(7):

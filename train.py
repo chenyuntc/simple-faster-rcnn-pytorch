@@ -4,7 +4,6 @@ import ipdb
 import matplotlib
 from tqdm import tqdm
 
-import torch as t
 from config import opt
 from data.dataset import Dataset, TestDataset,inverse_normalize
 from model import FasterRCNNVGG16
@@ -68,7 +67,6 @@ def train(**kwargs):
         trainer.load(opt.load_path)
         print('load pretrained model from %s' % opt.load_path)
 
-    # trainer.optimizer = trainer.faster_rcnn.get_great_optimizer()
     trainer.vis.text(dataset.db.label_names, win='labels')
     best_map = 0
     for epoch in range(opt.epoch):
@@ -77,7 +75,7 @@ def train(**kwargs):
             scale = at.scalar(scale)
             img, bbox, label = img.cuda().float(), bbox_.cuda(), label_.cuda()
             img, bbox, label = Variable(img), Variable(bbox), Variable(label)
-            losses = trainer.train_step(img, bbox, label, scale)
+            trainer.train_step(img, bbox, label, scale)
 
             if (ii + 1) % opt.plot_every == 0:
                 if os.path.exists(opt.debug_file):
@@ -105,9 +103,6 @@ def train(**kwargs):
                 trainer.vis.text(str(trainer.rpn_cm.value().tolist()), win='rpn_cm')
                 # roi confusion matrix
                 trainer.vis.img('roi_cm', at.totensor(trainer.roi_cm.conf, False).float())
-        # if best_map>0.6 and opt.test_num<5000: 
-        #     opt.test_num=10000
-        #     best_map = 0
         eval_result = eval(test_dataloader, faster_rcnn, test_num=opt.test_num)
 
         if eval_result['map'] > best_map:
@@ -116,8 +111,6 @@ def train(**kwargs):
         if epoch==9:
             trainer.load(best_path)
             trainer.faster_rcnn.scale_lr(opt.lr_decay)
-        # if epoch ==0:
-        #     trainer.optimizer = trainer.faster_rcnn.get_optimizer()
 
         trainer.vis.plot('test_map', eval_result['map'])
         lr_ = trainer.faster_rcnn.optimizer.param_groups[0]['lr']
@@ -125,12 +118,9 @@ def train(**kwargs):
                                             str(eval_result['map']), 
                                             str(trainer.get_meter_data()))
         trainer.vis.log(log_info)
-        # t.save(trainer.state_dict(),'checkpoints/fasterrcnn_%s.pth' %epoch)
-        # t.vis.save([opt.env])
         if epoch == 13: break
 
 
 if __name__ == '__main__':
     import fire
-
     fire.Fire()

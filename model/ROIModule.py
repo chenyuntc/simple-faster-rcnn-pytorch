@@ -4,10 +4,9 @@ from string import Template
 import cupy, torch
 import cupy as cp
 import torch as t
-from cupy.cuda import function
 from torch.autograd import Function
 
-from model.roi_cupy import kernel_backward, kernel_forward
+from model.utils.roi_cupy import kernel_backward, kernel_forward
 
 Stream = namedtuple('Stream', ['ptr'])
 
@@ -132,4 +131,3 @@ def test_roi_module():
     test_eq(x.grad, x_cn.grad, 'backward')
     print('test pass')
 
-######################test backward###########################################

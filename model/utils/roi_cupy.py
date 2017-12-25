@@ -8,8 +8,6 @@ kernel_forward = '''
     ){
         
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    //printf("%d,%d,%d,%d  ", blockIdx.x, blockDim.x,threadIdx.x,i);
-    //printf("%d-" ,NN);
     if(idx>=NN)
         return;
     const int pw = idx % pooled_width;
@@ -21,9 +19,6 @@ kernel_forward = '''
     const int roi_start_h = round(bottom_rois[num * 5 + 2] * spatial_scale);
     const int roi_end_w = round(bottom_rois[num * 5 + 3] * spatial_scale);
     const int roi_end_h = round(bottom_rois[num * 5 + 4] * spatial_scale);
-    //printf("-%f-",spatial_scale);
-    //printf("%f,%f,%d,%d,%d  ",bottom_rois[num * 5 + 3],bottom_rois[num * 5 + 2] * spatial_scale,round(bottom_rois[num * 5 + 3] * spatial_scale),num,num*5+3);
-    //printf("-%d,%d,%d,%d-  ",roi_start_w,roi_start_h,roi_end_w,roi_end_h);
     // Force malformed ROIs to be 1x1
     const int roi_width = max(roi_end_w - roi_start_w + 1, 1);
     const int roi_height = max(roi_end_h - roi_start_h + 1, 1);
@@ -64,10 +59,6 @@ kernel_forward = '''
     }
     top_data[idx]=maxval;
     argmax_data[idx]=maxidx;
-    //printf("%d,%d,%d,%d  ",pw,ph,num,c);
-    //printf("%d,%d,%f,%f  ",wstart-wend,roi_width,bin_size_h,roi_start_h);
-    //printf("%d,%d,%d,%d  ",roi_start_w,roi_start_h,roi_end_w,roi_end_h);
-    // }
     }
 '''
 kernel_backward = '''
@@ -84,7 +75,6 @@ kernel_backward = '''
     ////Importtan >= instead of >
     if(idx>=NN)
         return;
-    //printf("%d-%f ",top_diff[idx],top_diff[idx]);
     int w = idx % width;
     int h = (idx / width) % height;
     int c = (idx/ (width * height)) % channels;
@@ -142,7 +132,6 @@ kernel_backward = '''
         phend = min(max(phend, 0), pooled_height);
         pwstart = min(max(pwstart, 0), pooled_width);
         pwend = min(max(pwend, 0), pooled_width);
-        //printf("%d,%d,%d,%d ",phstart,phend,pwstart,pwend);
         for (int ph = phstart; ph < phend; ++ph) {
             for (int pw = pwstart; pw < pwend; ++pw) {
                 int index_ = ph * pooled_width + pw + offset;
@@ -153,7 +142,6 @@ kernel_backward = '''
             }
         }
     }
-    //printf("%d-%f ",idx);
     bottom_diff[idx] = gradient;
     }
 '''

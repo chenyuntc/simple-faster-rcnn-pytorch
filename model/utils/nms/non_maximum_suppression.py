@@ -157,8 +157,8 @@ void nms_kernel(const int n_bbox, const float thresh,
 
 
 def _call_nms_kernel(bbox, thresh):
-    # PyTorch does not support unsigned long.
-    # Doesn't matter,it returns ndarray finally. 
+    # PyTorch does not support unsigned long Tensor.
+    # Doesn't matter,since it returns ndarray finally.
     # So I'll keep it unmodified.
     n_bbox = bbox.shape[0]
     threads_per_block = 64

@@ -1,22 +1,3 @@
-# Mofidied work:
-# --------------------------------------------------------
-# Copyright (c) 2017 Preferred Networks, Inc.
-# --------------------------------------------------------
-#
-# Original works by:
-# --------------------------------------------------------
-# Faster R-CNN implementation by Chainer
-# Copyright (c) 2016 Shunta Saito
-# Licensed under The MIT License [see LICENSE for details]
-# https://github.com/mitmul/chainer-faster-rcnn
-# --------------------------------------------------------
-# Faster R-CNN
-# Copyright (c) 2015 Microsoft
-# Licensed under The MIT License [see LICENSE for details]
-# Written by Ross Girshick and Sean Bell
-# https://github.com/rbgirshick/py-faster-rcnn
-# --------------------------------------------------------
-
 from __future__ import division
 import torch as t
 import numpy as np
@@ -243,7 +224,6 @@ class FasterRCNN(nn.Module):
             scale = img.shape[3] / size[1]
             roi_cls_loc, roi_scores, rois, _ = self(img, scale=scale)
             # We are assuming that batch size is 1.
-            # roi_cls_loc = at.tonumpy(roi_cls_locs)#.data.numpy()
             roi_score = roi_scores.data
             roi_cls_loc = roi_cls_loc.data
             roi = at.totensor(rois) / scale
@@ -280,32 +260,8 @@ class FasterRCNN(nn.Module):
         self.train()
         return bboxes, labels, scores
 
-    def get_optimizer_group(self):
-        self.lr1, self.lr2, self.lr3 = opt.lr1, opt.lr2, opt.lr3
-        param_groups = [
-            {'params': [param for param in self.extractor.parameters() if param.requires_grad], 'lr': opt.lr1},
-            {'params': self.rpn.parameters(), 'lr': opt.lr2},
-            {'params': self.head.parameters(), 'lr': opt.lr3}
-        ]
-
-        self.optimizer = t.optim.SGD(param_groups, weight_decay=opt.weight_decay)
-        return self.optimizer
-
-    def update_optimizer_2(self, lr1, lr2, lr3):
-        self.lr1 = self.optimizer.param_groups[0]['lr'] = lr1
-        self.lr2 = self.optimizer.param_groups[1]['lr'] = lr2
-        self.lr3 = self.optimizer.param_groups[2]['lr'] = lr3
-        return self.optimizer
-
-    def get_optimizer_(self):
-        self.lr1 = lr = opt.lr1
-        params = [param for param in self.parameters() if param.requires_grad]
-        self.optimizer = t.optim.SGD(params, lr=lr, momentum=0.9, weight_decay=0.0005)
-        return self.optimizer
-
     def get_optimizer(self):
-        lr = opt.lr1
-        self.lr1 = lr
+        lr = opt.lr
         params = []
         for key, value in dict(self.named_parameters()).items():
             if value.requires_grad:
@@ -313,7 +269,10 @@ class FasterRCNN(nn.Module):
                     params += [{'params': [value], 'lr': lr * 2, 'weight_decay': 0}]
                 else:
                     params += [{'params': [value], 'lr': lr, 'weight_decay': opt.weight_decay}]
-        self.optimizer = t.optim.SGD(params, momentum=0.9)
+        if opt.use_adam:
+            self.optimizer = t.optim.Adam(params)
+        else:
+            self.optimizer = t.optim.SGD(params, momentum=0.9)
         return self.optimizer
 
     def scale_lr(self, decay=0.1):
@@ -321,37 +280,6 @@ class FasterRCNN(nn.Module):
             param_group['lr'] *= decay
         return self.optimizer
 
-    def get_optimizer_adam(self):
-        lr = opt.lr1 *0.1
-        self.lr1 = lr
-        params = []
-        for key, value in dict(self.named_parameters()).items():
-            if value.requires_grad:
-                if 'bias' in key:
-                    params += [{'params': [value], 'lr': lr * 2, 'weight_decay': 0}]
-                else:
-                    params += [{'params': [value], 'lr': lr, 'weight_decay': opt.weight_decay}]
-        self.optimizer = t.optim.Adam(params)
-        return self.optimizer
 
-    def get_optimizer_chainer(self):
-        self.optimizer = t.optim.SGD(self.parameters(), 
-                            lr = opt.lr1,
-                            momentum=0.9,
-                            weight_decay=opt.weight_decay)
-        return self.optimizer
 
-    def get_great_optimizer(self,warm_start=True):
-        lr = opt.lr1
-        self.lr1 = lr
-        params = []
-        for key, value in dict(self.named_parameters()).items():
-            if warm_start and ('extractor' in key  or 'classifier' in key):
-                continue
-            if value.requires_grad:
-                if 'bias' in key:
-                    params += [{'params': [value], 'lr': lr * 2, 'weight_decay': 0}]
-                else:
-                    params += [{'params': [value], 'lr': lr, 'weight_decay': opt.weight_decay}]
-        self.optimizer = t.optim.SGD(params, momentum=0.9)
-        return self.optimizer
+

@@ -7,7 +7,6 @@ from pprint import pprint
 
 class Config:
     # data
-    voc_data_dir = '/mnt/3/VOC/VOCdevkit/VOC2007/'
     voc_data_dir = '/home/cy/.chainer/dataset/pfnet/chainercv/voc/VOCdevkit/VOC2007/'
     min_size = 600
     max_size = 1000
@@ -21,10 +20,8 @@ class Config:
     # param for optimizer
     weight_decay = 0.0005  # 0.0005 in origin paper but 0.0001 in tf-faster-rcnn
     lr_decay = 0.1  # 1e-3 -> 1e-4
-    # lr = 1e-3
-    lr1 = 1e-3  # extractor
-    lr2 = 1e-3  # rpn
-    lr3 = 1e-3  # roi head
+    lr = 1e-3
+
 
     # visualization
     env = 'faster-rcnn'  # visdom env
@@ -38,8 +35,6 @@ class Config:
     # training
     epoch = 100
 
-    # change lr
-    milestone = [0, 1, 5, 10]
 
     use_adam = False
     use_chainer = False

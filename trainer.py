@@ -1,15 +1,13 @@
 from collections import namedtuple
-import numpy as np
 import time
 from torch.nn import functional as F
-from model.utils.target_tool import AnchorTargetCreator, ProposalTargetCreator
+from model.utils.creator_tool import AnchorTargetCreator, ProposalTargetCreator
 
 from torch import nn
 import torch as t
 from torch.autograd import Variable
-from util.visulizer import Visualizer
 from util import array_tool as at
-from util.vis_tool import visdom_bbox
+from util.vis_tool import  Visualizer
 
 from config import opt
 from torchnet.meter import ConfusionMeter, AverageValueMeter
@@ -55,8 +53,6 @@ class FasterRCNNTrainer(nn.Module):
         self.loc_normalize_std = faster_rcnn.loc_normalize_std
 
         self.optimizer = self.faster_rcnn.get_optimizer()
-        if opt.use_adam:
-            self.optimizer = self.faster_rcnn.get_optimizer_adam()
         # visdom wrapper
         self.vis = Visualizer(env=opt.env)
 
