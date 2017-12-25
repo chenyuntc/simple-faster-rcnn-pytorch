@@ -181,7 +181,7 @@ This work builds on many excellent works, which include:
 - [faster-rcnn.pytorch by Jianwei Yang and Jiasen Lu](https://github.com/jwyang/faster-rcnn.pytorch).It's mainly based on [longcw's faster_rcnn_pytorch](https://github.com/longcw/faster_rcnn_pytorch)
 - All the above Repositories have referred to [py-faster-rcnn by Ross Girshick and Sean Bell](https://github.com/rbgirshick/py-faster-rcnn)  either directly or indirectly. 
 
-## other
+## ^_^
 Licensed under MIT, see the LICENSE for more detail.
 
 Contribution Welcome.
@@ -189,3 +189,7 @@ Contribution Welcome.
 If you encounter any problem, feel free to open an issue.
 
 Correct me if anything is wrong or unclear.
+
+model structure
+![img](http://7zh43r.com2.z0.glb.clouddn.com/del/faster-rcnn-model.svg)
+
