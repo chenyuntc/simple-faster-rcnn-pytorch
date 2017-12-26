@@ -108,7 +108,6 @@ def test_roi_module():
     rois = t.autograd.Variable(bottom_rois)
     output = module(x, rois)
     output.sum().backward()
-    grad_x = x.grad.cpu().data.numpy()
 
     def t2c(variable):
         npa = variable.data.cpu().numpy()
@@ -130,4 +129,3 @@ def test_roi_module():
     F.sum(o_cn).backward()
     test_eq(x.grad, x_cn.grad, 'backward')
     print('test pass')
-

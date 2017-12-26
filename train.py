@@ -5,7 +5,7 @@ import matplotlib
 from tqdm import tqdm
 
 from config import opt
-from data.dataset import Dataset, TestDataset,inverse_normalize
+from data.dataset import Dataset, TestDataset, inverse_normalize
 from model import FasterRCNNVGG16
 from torch.autograd import Variable
 from torch.utils import data as data_
@@ -17,10 +17,12 @@ from util.eval_tool import eval_detection_voc
 # fix for ulimit
 # https://github.com/pytorch/pytorch/issues/973#issuecomment-346405667
 import resource
+
 rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
 resource.setrlimit(resource.RLIMIT_NOFILE, (20480, rlimit[1]))
 
 matplotlib.use('agg')
+
 
 def eval(dataloader, faster_rcnn, test_num=10000):
     pred_bboxes, pred_labels, pred_scores = list(), list(), list()
@@ -86,17 +88,17 @@ def train(**kwargs):
 
                 # plot groud truth bboxes
                 ori_img_ = inverse_normalize(at.tonumpy(img[0]))
-                gt_img = visdom_bbox(ori_img_, 
-                                    at.tonumpy(bbox_[0]), 
-                                    at.tonumpy(label_[0]))
+                gt_img = visdom_bbox(ori_img_,
+                                     at.tonumpy(bbox_[0]),
+                                     at.tonumpy(label_[0]))
                 trainer.vis.img('gt_img', gt_img)
 
                 # plot predicti bboxes
-                _bboxes, _labels, _scores = trainer.faster_rcnn.predict([ori_img_],visualize=True)
-                pred_img = visdom_bbox( ori_img_, 
-                                        at.tonumpy(_bboxes[0]),
-                                        at.tonumpy(_labels[0]).reshape(-1), 
-                                        at.tonumpy(_scores[0]))
+                _bboxes, _labels, _scores = trainer.faster_rcnn.predict([ori_img_], visualize=True)
+                pred_img = visdom_bbox(ori_img_,
+                                       at.tonumpy(_bboxes[0]),
+                                       at.tonumpy(_labels[0]).reshape(-1),
+                                       at.tonumpy(_scores[0]))
                 trainer.vis.img('pred_img', pred_img)
 
                 # rpn confusion matrix(meter)
@@ -108,19 +110,21 @@ def train(**kwargs):
         if eval_result['map'] > best_map:
             best_map = eval_result['map']
             best_path = trainer.save(best_map=best_map)
-        if epoch==9:
+        if epoch == 9:
             trainer.load(best_path)
             trainer.faster_rcnn.scale_lr(opt.lr_decay)
 
         trainer.vis.plot('test_map', eval_result['map'])
         lr_ = trainer.faster_rcnn.optimizer.param_groups[0]['lr']
         log_info = 'lr:{}, map:{},loss:{}'.format(str(lr_),
-                                            str(eval_result['map']), 
-                                            str(trainer.get_meter_data()))
+                                                  str(eval_result['map']),
+                                                  str(trainer.get_meter_data()))
         trainer.vis.log(log_info)
-        if epoch == 13: break
+        if epoch == 13: 
+            break
 
 
 if __name__ == '__main__':
     import fire
+
     fire.Fire()

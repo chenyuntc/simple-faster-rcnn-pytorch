@@ -5,15 +5,15 @@ from torchvision import transforms as tvtsf
 from . import util
 import numpy as np
 from config import opt
-from util import array_tool as at
 
 
 def inverse_normalize(img):
     if opt.caffe_pretrain:
-        img = img + (np.array([122.7717, 115.9465, 102.9801]).reshape(3,1,1))
+        img = img + (np.array([122.7717, 115.9465, 102.9801]).reshape(3, 1, 1))
         return img[::-1, :, :]
     # approximate un-normalize for visualize
-    return (img*0.225+0.45).clip(min=0,max=1)*255
+    return (img * 0.225 + 0.45).clip(min=0, max=1) * 255
+
 
 def pytorch_normalze(img):
     """
@@ -21,25 +21,28 @@ def pytorch_normalze(img):
     return appr -1~1 RGB
     """
     normalize = tvtsf.Normalize(mean=[0.485, 0.456, 0.406],
-                                    std=[0.229, 0.224, 0.225])
+                                std=[0.229, 0.224, 0.225])
     img = normalize(t.from_numpy(img))
     return img.numpy()
+
 
 def caffe_normalize(img):
     """
     return appr -125-125 BGR
     """
-    img = img[[2,1,0],:,:] #RGB-BGR
-    img = img*255
-    mean=np.array([122.7717, 115.9465, 102.9801]).reshape(3,1,1)
+    img = img[[2, 1, 0], :, :]  # RGB-BGR
+    img = img * 255
+    mean = np.array([122.7717, 115.9465, 102.9801]).reshape(3, 1, 1)
     img = (img - mean).astype(np.float32, copy=True)
     return img
+
 
 def preprocess(img, min_size=600, max_size=1000):
     """Preprocess an image for feature extraction.
 
     The length of the shorter edge is scaled to :obj:`self.min_size`.
     After the scaling, if the length of the longer edge is longer than
+    :param min_size:
     :obj:`self.max_size`, the image is scaled to fit the longer edge
     to :obj:`self.max_size`.
 
@@ -48,6 +51,8 @@ def preprocess(img, min_size=600, max_size=1000):
 
     Args:
         img (~numpy.ndarray): An image. This is in CHW and RGB format.
+            The range of its value is :math:`[0, 255]`.
+         (~numpy.ndarray): An image. This is in CHW and RGB format.
             The range of its value is :math:`[0, 255]`.
 
     Returns:
@@ -68,6 +73,7 @@ def preprocess(img, min_size=600, max_size=1000):
     else:
         normalize = pytorch_normalze
     return normalize(img)
+
 
 class Transform(object):
 
@@ -92,7 +98,7 @@ class Transform(object):
         return img, bbox, label, scale
 
 
-class Dataset():
+class Dataset:
     def __init__(self, opt):
         self.opt = opt
         self.db = VOCBboxDataset(opt.voc_data_dir)
@@ -110,16 +116,15 @@ class Dataset():
         return len(self.db)
 
 
-class TestDataset():
-    def __init__(self, opt,split='test',use_difficult=True):
+class TestDataset:
+    def __init__(self, opt, split='test', use_difficult=True):
         self.opt = opt
-        self.db = testset = VOCBboxDataset(opt.voc_data_dir, split=split, use_difficult=use_difficult)
+        self.db = VOCBboxDataset(opt.voc_data_dir, split=split, use_difficult=use_difficult)
 
     def __getitem__(self, idx):
         ori_img, bbox, label, difficult = self.db.get_example(idx)
         img = preprocess(ori_img)
-        return (img), ori_img.shape[1:], bbox, label, difficult
+        return img, ori_img.shape[1:], bbox, label, difficult
 
     def __len__(self):
         return len(self.db)
-

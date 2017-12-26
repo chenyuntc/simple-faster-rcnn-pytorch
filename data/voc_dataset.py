@@ -18,14 +18,15 @@
 # https://github.com/rbgirshick/py-faster-rcnn
 # ----------------------------------------------------
 
-import numpy as np
 import os
-import warnings
 import xml.etree.ElementTree as ET
+
+import numpy as np
+
 from .util import read_image
 
 
-class VOCBboxDataset():
+class VOCBboxDataset:
     """Bounding box dataset for PASCAL `VOC`_.
 
     .. _`VOC`: http://host.robots.ox.ac.uk/pascal/VOC/voc2012/

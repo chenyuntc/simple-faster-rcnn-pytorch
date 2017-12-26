@@ -288,7 +288,7 @@ def _get_inside_index(anchor, H, W):
     return index_inside
 
 
-class ProposalCreator():
+class ProposalCreator:
     # unNOTE: I'll make it undifferential
     # unTODO: make sure it's ok
     # It's ok
@@ -415,7 +415,6 @@ class ProposalCreator():
         if n_pre_nms > 0:
             order = order[:n_pre_nms]
         roi = roi[order, :]
-        score = score[order]
 
         # Apply nms (e.g. threshold = 0.7).
         # Take after_nms_topN (e.g. 300).
