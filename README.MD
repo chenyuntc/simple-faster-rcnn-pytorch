@@ -191,5 +191,5 @@ If you encounter any problem, feel free to open an issue.
 Correct me if anything is wrong or unclear.
 
 model structure
-![img](http://7zh43r.com2.z0.glb.clouddn.com/del/faster-rcnn-model.svg)
+![img](http://7zh43r.com2.z0.glb.clouddn.com/del/model-all.svg)
 
