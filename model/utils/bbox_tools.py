@@ -1,9 +1,7 @@
 import numpy as np
 import numpy as xp
 
-
-# !TODO: now only suport for numpy
-# should I add support for torch.CudaTensor?
+import six
 from six import __init__
 
 
