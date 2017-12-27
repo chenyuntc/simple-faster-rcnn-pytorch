@@ -4,7 +4,7 @@ from skimage import transform as sktsf
 from torchvision import transforms as tvtsf
 from . import util
 import numpy as np
-from config import opt
+from utils.config import opt
 
 
 def inverse_normalize(img):

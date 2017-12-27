@@ -2,14 +2,14 @@ from __future__ import division
 import torch as t
 import numpy as np
 import cupy as cp
-from util import array_tool as at
+from utils import array_tool as at
 from model.utils.bbox_tools import loc2bbox
 from model.utils.nms import non_maximum_suppression
 
 from torch import nn
 from data.dataset import preprocess
 from torch.nn import functional as F
-from config import opt
+from utils.config import opt
 
 
 class FasterRCNN(nn.Module):

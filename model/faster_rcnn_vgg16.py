@@ -1,11 +1,11 @@
 import torch as t
 from torch import nn
 from torchvision.models import vgg16
-from .region_proposal_network import RegionProposalNetwork
-from .faster_rcnn import FasterRCNN
-from .ROIModule import ROIPooling2D
-from util import array_tool as at
-from config import opt
+from model.region_proposal_network import RegionProposalNetwork
+from model.faster_rcnn import FasterRCNN
+from model.roi_module import RoIPooling2D
+from utils import array_tool as at
+from utils.config import opt
 
 
 def decom_vgg16():
@@ -154,7 +154,7 @@ class VGG16RoIHead(nn.Module):
         self.n_class = n_class
         self.roi_size = roi_size
         self.spatial_scale = spatial_scale
-        self.roi = ROIPooling2D(self.roi_size, self.roi_size, self.spatial_scale)
+        self.roi = RoIPooling2D(self.roi_size, self.roi_size, self.spatial_scale)
 
     def forward(self, x, rois, roi_indices):
         """Forward the chain.

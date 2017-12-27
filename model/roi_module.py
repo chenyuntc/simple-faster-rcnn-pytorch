@@ -26,7 +26,7 @@ def GET_BLOCKS(N, K=CUDA_NUM_THREADS):
     return (N + K - 1) // K
 
 
-class ROI(Function):
+class RoI(Function):
     """
     NOTE：only CUDA-compatible
     """
@@ -79,14 +79,14 @@ class ROI(Function):
         return grad_input, None
 
 
-class ROIPooling2D(t.nn.Module):
+class RoIPooling2D(t.nn.Module):
 
     def __init__(self, outh, outw, spatial_scale):
-        super(ROIPooling2D, self).__init__()
-        self.ROI = ROI(outh, outw, spatial_scale)
+        super(RoIPooling2D, self).__init__()
+        self.RoI = RoI(outh, outw, spatial_scale)
 
     def forward(self, x, rois):
-        return self.ROI(x, rois)
+        return self.RoI(x, rois)
 
 
 def test_roi_module():
@@ -103,7 +103,7 @@ def test_roi_module():
     outh, outw = PH, PW
 
     # pytorch version
-    module = ROIPooling2D(outh, outw, spatial_scale)
+    module = RoIPooling2D(outh, outw, spatial_scale)
     x = t.autograd.Variable(bottom_data, requires_grad=True)
     rois = t.autograd.Variable(bottom_rois)
     output = module(x, rois)

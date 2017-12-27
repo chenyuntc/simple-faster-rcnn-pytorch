@@ -137,7 +137,6 @@ kernel_backward = '''
                 int index_ = ph * pooled_width + pw + offset;
                 if (argmax_data[index_] == (h * width + w)) {
                     gradient += top_diff[index_];
-                    //printf("%d-%f ",index_, top_diff[index_]);
                 }
             }
         }
