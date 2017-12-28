@@ -40,10 +40,10 @@ VGG16 train on `trainval` and test on `test` split.
 |              Implementation              |   GPU    | Inference | Trainining |
 | :--------------------------------------: | :------: | :-------: | :--------: |
 | [origin paper](https://arxiv.org/abs/1506.01497) |   K40    |   5 fps   |     NA     |
-|                 This[^1]                 | TITAN Xp |  14-15 fps   |  6 fps   |
-| [pytorch-faster-rcnn](https://github.com/ruotianluo/pytorch-faster-rcnn) | TITAN Xp |    15-17fps     |    6fps    |
+|                 This[1]                  | TITAN Xp | 14-15 fps |   6 fps    |
+| [pytorch-faster-rcnn](https://github.com/ruotianluo/pytorch-faster-rcnn) | TITAN Xp | 15-17fps  |    6fps    |
 
-[^1]: make sure you install cupy correctly and only one program run on the GPU. The training speed is sensitive to your gpu status. Moreever it's slow in the start of the program.
+[1]: make sure you install cupy correctly and only one program run on the GPU. The training speed is sensitive to your gpu status. Morever it's slow in the start of the program.
 It could be even faster by removing visualization, logging, averaging loss etc.
 ## Install dependencies
 
@@ -158,20 +158,32 @@ Some Key arguments:
 you may open browser, type:`http://<ip>:8097` and see the visualization of training procedure as below:
 ![visdom](http://7zh43r.com2.z0.glb.clouddn.com/del/visdom-fasterrcnn.png) 
 ## Troubleshooting
-
-TODO: make it clear
-
 - visdom
-- dataloader/ulimit
-- cupy
-- vgg
+  Some js files in visdom was blocked in China, see simple solution [here](https://github.com/chenyuntc/PyTorch-book/blob/master/README.md#visdom打不开及其解决方案)
+
+​   Also, `updata=append` doesn't work due to a bug brought in latest version see [issue](https://github.com/facebookresearch/visdom/issues/233) and [fix](https://github.com/facebookresearch/visdom/pull/234/files)
+
+  You don't need to build from source, just modify related files would be OK.
+
+- dataloader: `received 0 items of ancdata` 
+  see [discussion](https://github.com/pytorch/pytorch/issues/973#issuecomment-346405667), It's alreadly fixed in [train.py](https://github.com/chenyuntc/simple-faster-rcnn-pytorch/blob/master/train.py#L17-L22). So I think you are free from this problem.
+- cupy `numpy.core._internal.AxisError: axis 1 out of bounds [0, 1)`
+  bug of cupy, see [issue](https://github.com/cupy/cupy/issues/793), fix via [pull request](https://github.com/cupy/cupy/pull/749)
+
+  You don't need to build from source, just modify related files would be OK.
+
+- vgg: Slow in construction
+  VGG16 is slow in construction(i.e. 9s),it could be speed up by this [PR](https://github.com/pytorch/vision/pull/377)
+  You don't need to build from source, just modify related files would be OK.
+
 
 ## More
 
 - [ ] training on coco
 - [ ] resnet
-- [ ] replace cupy with THTensor+cffi?
-- [ ] Convert all numpy code to tensor?
+- [ ] Maybe；replace cupy with THTensor+cffi?
+- [ ] Maybe：Convert all numpy code to tensor?
+- [ ] check python2-compatibility
 
 ## Acknowledgement
 This work builds on many excellent works, which include:
@@ -192,4 +204,3 @@ Correct me if anything is wrong or unclear.
 
 model structure
 ![img](http://7zh43r.com2.z0.glb.clouddn.com/del/model-all.svg)
-
