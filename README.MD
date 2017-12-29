@@ -62,7 +62,7 @@ requires python3 and PyTorch 0.3
   python3 build.py build_ext --inplace
   ```
 
-- start vidom for visualize
+- start vidom for visualization
 
 ```Bash
 nohup python3 -m visdom.server &
@@ -71,7 +71,7 @@ nohup python3 -m visdom.server &
 
 ## Demo
 
-Download pretrained model from [Google Drive](https://drive.google.com/open?id=1cQ27LIn-Rig4-Uayzy_gH5-cW-NRGVzY).
+Download pretrained model from [Google Drive](https://drive.google.com/open?id=1cQ27LIn-Rig4-Uayzy_gH5-cW-NRGVzY) or [Baidu Netdisk( passwd: scxn)](https://pan.baidu.com/s/1o87RuXW)
 
 
 See [demo.ipynb](https://github.com/chenyuntc/simple-faster-rcnn-pytorch/blob/master/demo.ipynb) for more detail.
