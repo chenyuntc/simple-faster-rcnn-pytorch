@@ -8,8 +8,8 @@ from pprint import pprint
 class Config:
     # data
     voc_data_dir = '/home/cy/.chainer/dataset/pfnet/chainercv/voc/VOCdevkit/VOC2007/'
-    min_size = 600
-    max_size = 1000
+    min_size = 600  # image resize
+    max_size = 1000 # image resize
     num_workers = 8
     test_num_workers = 8
 
@@ -18,7 +18,8 @@ class Config:
     roi_sigma = 1.
 
     # param for optimizer
-    weight_decay = 0.0005  # 0.0005 in origin paper but 0.0001 in tf-faster-rcnn
+    # 0.0005 in origin paper but 0.0001 in tf-faster-rcnn
+    weight_decay = 0.0005
     lr_decay = 0.1  # 1e-3 -> 1e-4
     lr = 1e-3
 
@@ -33,20 +34,20 @@ class Config:
     pretrained_model = 'vgg16'
 
     # training
-    epoch = 100
+    epoch = 14
 
 
-    use_adam = False
-    use_chainer = False
-    use_drop = False
+    use_adam = False # Use Adam optimizer
+    use_chainer = False # try match everything as chainer
+    use_drop = False # use dropout in RoIHead
     # debug
     debug_file = '/tmp/debugf'
 
     test_num = 10000
     # model
-    load_path = None  # '/mnt/3/rpn.pth'
+    load_path = None
 
-    caffe_pretrain = False
+    caffe_pretrain = False # use caffe pretrained model instead of torchvision
     caffe_pretrain_path = 'checkpoints/vgg16-caffe.pth'
 
     def _parse(self, kwargs):
