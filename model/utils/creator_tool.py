@@ -1,5 +1,5 @@
 import numpy as np
-import cupy
+import cupy as cp
 
 from model.utils.bbox_tools import bbox2loc, bbox_iou, loc2bbox
 from model.utils.nms import non_maximum_suppression
@@ -422,7 +422,7 @@ class ProposalCreator:
         # unNOTE: somthing is wrong here!
         # TODO: remove cuda.to_gpu
         keep = non_maximum_suppression(
-            cp.ascontiguousarray(cp.asarray(a)),
+            cp.ascontiguousarray(cp.asarray(roi)),
             thresh=self.nms_thresh)
         if n_post_nms > 0:
             keep = keep[:n_post_nms]
