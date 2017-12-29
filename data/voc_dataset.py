@@ -1,23 +1,3 @@
-# Mofidied work:
-# Original works by:
-# --------------------------------------------------------
-# Faster R-CNN implementation In ChainerCV
-# Copyright (c) 2017 Preferred Networks, Inc.
-# Licensed under The MIT License [see LICENSE for details]
-# https://github.com/chainer/chainercv
-# --------------------------------------------------------
-# Faster R-CNN implementation by Chainer
-# Copyright (c) 2016 Shunta Saito
-# Licensed under The MIT License [see LICENSE for details]
-# https://github.com/mitmul/chainer-faster-rcnn
-# --------------------------------------------------------
-# Faster R-CNN
-# Copyright (c) 2015 Microsoft
-# Licensed under The MIT License [see LICENSE for details]
-# Written by Ross Girshick and Sean Bell
-# https://github.com/rbgirshick/py-faster-rcnn
-# ----------------------------------------------------
-
 import os
 import xml.etree.ElementTree as ET
 
@@ -51,7 +31,7 @@ class VOCBboxDataset:
     The labels are packed into a one dimensional tensor of shape :math:`(R,)`.
     :math:`R` is the number of bounding boxes in the image.
     The class name of the label :math:`l` is :math:`l` th element of
-    :obj:`chainercv.datasets.voc_bbox_label_names`.
+    :obj:`VOC_BBOX_LABEL_NAMES`.
 
     The array :obj:`difficult` is a one dimensional boolean array of shape
     :math:`(R,)`. :math:`R` is the number of bounding boxes in the image.

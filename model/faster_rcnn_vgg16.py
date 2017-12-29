@@ -37,58 +37,17 @@ def decom_vgg16():
 
 class FasterRCNNVGG16(FasterRCNN):
     """Faster R-CNN based on VGG-16.
-
-    When you specify the path of a pre-trained chainer model serialized as
-    a :obj:`.npz` file in the constructor, this chain model automatically
-    initializes all the parameters with it.
-    When a string in prespecified set is provided, a pretrained model is
-    loaded from weights distributed on the Internet.
-    The list of pretrained models supported are as follows:
-
-    * :obj:`voc07`: Loads weights trained with the trainval split of \
-        PASCAL VOC2007 Detection Dataset.
-    * :obj:`imagenet`: Loads weights trained with ImageNet Classfication \
-        task for the feature extractor and the head modules. \
-        Weights that do not have a corresponding layer in VGG-16 \
-        will be randomly initialized.
-
     For descriptions on the interface of this model, please refer to
-    :class:`~chainercv.links.model.faster_rcnn.FasterRCNN`.
-
-    :class:`~chainercv.links.model.faster_rcnn.FasterRCNNVGG16`
-    supports finer control on random initializations of weights by arguments
-    :obj:`vgg_initialW`, :obj:`rpn_initialW`, :obj:`loc_initialW` and
-    :obj:`score_initialW`.
-    It accepts a callable that takes an array and edits its values.
-    If :obj:`None` is passed as an initializer, the default initializer is
-    used.
+    :class:`model.faster_rcnn.FasterRCNN`.
 
     Args:
         n_fg_class (int): The number of classes excluding the background.
-        pretrained_model (str): The destination of the pre-trained
-            chainer model serialized as a :obj:`.npz` file.
-            If this is one of the strings described
-            above, it automatically loads weights stored under a directory
-            :obj:`$CHAINER_DATASET_ROOT/pfnet/chainercv/models/`,
-            where :obj:`$CHAINER_DATASET_ROOT` is set as
-            :obj:`$HOME/.chainer/dataset` unless you specify another value
-            by modifying the environment variable.
-        min_size (int): A preprocessing paramter for :meth:`prepare`.
-        max_size (int): A preprocessing paramter for :meth:`prepare`.
         ratios (list of floats): This is ratios of width to height of
             the anchors.
         anchor_scales (list of numbers): This is areas of anchors.
             Those areas will be the product of the square of an element in
             :obj:`anchor_scales` and the original area of the reference
             window.
-        vgg_initialW (callable): Initializer for the layers corresponding to
-            the VGG-16 layers.
-        rpn_initialW (callable): Initializer for Region Proposal Network
-            layers.
-        loc_initialW (callable): Initializer for the localization head.
-        score_initialW (callable): Initializer for the score head.
-        proposal_creator_params (dict): Key valued paramters for
-            :class:`~chainercv.links.model.faster_rcnn.ProposalCreator`.
 
     """
 
@@ -128,14 +87,12 @@ class VGG16RoIHead(nn.Module):
     This class is used as a head for Faster R-CNN.
     This outputs class-wise localizations and classification based on feature
     maps in the given RoIs.
+    
     Args:
         n_class (int): The number of classes possibly including the background.
         roi_size (int): Height and width of the feature maps after RoI-pooling.
         spatial_scale (float): Scale of the roi is resized.
-        vgg_initialW (callable): Initializer for the layers corresponding to
-            the VGG-16 layers.
-        loc_initialW (callable): Initializer for the localization head.
-        score_initialW (callable): Initializer for the score head.
+        classifier (nn.Module): Two layer Linear ported from vgg16
 
     """
 

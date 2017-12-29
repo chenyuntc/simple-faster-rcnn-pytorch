@@ -1,5 +1,5 @@
 import numpy as np
-from chainer import cuda
+import cupy
 
 from model.utils.bbox_tools import bbox2loc, bbox_iou, loc2bbox
 from model.utils.nms import non_maximum_suppression
@@ -419,9 +419,10 @@ class ProposalCreator:
         # Apply nms (e.g. threshold = 0.7).
         # Take after_nms_topN (e.g. 300).
 
-        # NOTE: somthing is wrong here!
+        # unNOTE: somthing is wrong here!
+        # TODO: remove cuda.to_gpu
         keep = non_maximum_suppression(
-            cuda.to_gpu(roi),
+            cp.ascontiguousarray(cp.asarray(a)),
             thresh=self.nms_thresh)
         if n_post_nms > 0:
             keep = keep[:n_post_nms]

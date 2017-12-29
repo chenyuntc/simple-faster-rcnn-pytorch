@@ -34,10 +34,10 @@ class RegionProposalNetwork(nn.Module):
             initialize weight.
             May also be a callable that takes an array and edits its values.
         proposal_creator_params (dict): Key valued paramters for
-            :class:`~chainercv.links.model.faster_rcnn.ProposalCreator`.
+            :class:`model.utils.creator_tools.ProposalCreator`.
 
     .. seealso::
-        :class:`~chainercv.links.model.faster_rcnn.ProposalCreator`
+        :class:`~model.utils.creator_tools.ProposalCreator`
 
     """
 
@@ -70,7 +70,7 @@ class RegionProposalNetwork(nn.Module):
         * :math:`A` is number of anchors assigned to each pixel.
 
         Args:
-            x (~chainer.Variable): The Features extracted from images.
+            x (~torch.autograd.Variable): The Features extracted from images.
                 Its shape is :math:`(N, C, H, W)`.
             img_size (tuple of ints): A tuple :obj:`height, width`,
                 which contains image size after scaling.
@@ -78,7 +78,7 @@ class RegionProposalNetwork(nn.Module):
                 reading them from files.
 
         Returns:
-            (~chainer.Variable, ~chainer.Variable, array, array, array):
+            (~torch.autograd.Variable, ~torch.autograd.Variable, array, array, array):
 
             This is a tuple of five following values.
 

@@ -27,7 +27,7 @@ class FasterRCNN(nn.Module):
         in the RoIs and improve localizations.
 
     Each stage is carried out by one of the callable
-    :class:`chainer.Chain` objects :obj:`feature`, :obj:`rpn` and :obj:`head`.
+    :class:`torch.nn.Module` objects :obj:`feature`, :obj:`rpn` and :obj:`head`.
 
     There are two functions :meth:`predict` and :meth:`__call__` to conduct
     object detection.
@@ -49,10 +49,10 @@ class FasterRCNN(nn.Module):
         extractor (nn.Module): A module that takes a BCHW image
             array and returns feature maps.
         rpn (nn.Module): A module that has the same interface as
-            :class:`~chainercv.links.model.faster_rcnn.RegionProposalNetwork`.
+            :class:`model.region_proposal_network.RegionProposalNetwork`.
             Please refer to the documentation found there.
-        head (nn.Module): A callable that takes
-            a BCHW array, RoIs and batch indices for RoIs. This returns class
+        head (nn.Module): A module that takes
+            a BCHW variable, RoIs and batch indices for RoIs. This returns class
             dependent localization paramters and class scores.
         loc_normalize_mean (tuple of four floats): Mean values of
             localization estimates.
@@ -99,7 +99,7 @@ class FasterRCNN(nn.Module):
         the :math:`L` th class.
 
         Args:
-            x (~chainer.Variable): 4D image variable.
+            x (autograd.Variable): 4D image variable.
             scale (float): Amount of scaling applied to the raw image
                 during preprocessing.
 
@@ -261,6 +261,10 @@ class FasterRCNN(nn.Module):
         return bboxes, labels, scores
 
     def get_optimizer(self):
+        """
+        return optimizer, It could be overwriten if you want to specify 
+        special optimizer
+        """
         lr = opt.lr
         params = []
         for key, value in dict(self.named_parameters()).items():
