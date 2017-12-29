@@ -68,7 +68,6 @@ requires python3 and PyTorch 0.3
 nohup python3 -m visdom.server &
 ```
 
-If you're in China and have encounter problem with visdom (i.e. timeout, blank screen), you may refer to [visdom issue](https://github.com/facebookresearch/visdom/issues/111#issuecomment-321743890), ~~and a temporary and fast solution provided by me~~
 
 ## Demo
 
@@ -157,24 +156,32 @@ Some Key arguments:
 
 you may open browser, type:`http://<ip>:8097` and see the visualization of training procedure as below:
 ![visdom](http://7zh43r.com2.z0.glb.clouddn.com/del/visdom-fasterrcnn.png) 
+
+If you're in China and have encounter problem with visdom (i.e. timeout, blank screen), you may refer to [visdom issue](https://github.com/facebookresearch/visdom/issues/111#issuecomment-321743890), and see [troubleshooting](#troubleshooting) for solution.
 ## Troubleshooting
 - visdom
+
   Some js files in visdom was blocked in China, see simple solution [here](https://github.com/chenyuntc/PyTorch-book/blob/master/README.md#visdom打不开及其解决方案)
 
-​   Also, `updata=append` doesn't work due to a bug brought in latest version see [issue](https://github.com/facebookresearch/visdom/issues/233) and [fix](https://github.com/facebookresearch/visdom/pull/234/files)
+  Also, `updata=append` doesn't work due to a bug brought in latest version, see [issue](https://github.com/facebookresearch/visdom/issues/233) and [fix](https://github.com/facebookresearch/visdom/pull/234/files)
 
-  You don't need to build from source, just modify related files would be OK.
+  You don't need to build from source, modifying related files would be OK.
 
 - dataloader: `received 0 items of ancdata` 
+
   see [discussion](https://github.com/pytorch/pytorch/issues/973#issuecomment-346405667), It's alreadly fixed in [train.py](https://github.com/chenyuntc/simple-faster-rcnn-pytorch/blob/master/train.py#L17-L22). So I think you are free from this problem.
+  
 - cupy `numpy.core._internal.AxisError: axis 1 out of bounds [0, 1)`
+
   bug of cupy, see [issue](https://github.com/cupy/cupy/issues/793), fix via [pull request](https://github.com/cupy/cupy/pull/749)
 
-  You don't need to build from source, just modify related files would be OK.
+  You don't need to build from source, modifying related files would be OK.
 
-- vgg: Slow in construction
-  VGG16 is slow in construction(i.e. 9s),it could be speed up by this [PR](https://github.com/pytorch/vision/pull/377)
-  You don't need to build from source, just modify related files would be OK.
+- VGG: Slow in construction
+
+  VGG16 is slow in construction(i.e. 9 seconds),it could be speed up by this [PR](https://github.com/pytorch/vision/pull/377)
+  
+  You don't need to build from source, modifying related files would be OK.
 
 
 ## More
