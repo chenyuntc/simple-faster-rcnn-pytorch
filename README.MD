@@ -1,6 +1,6 @@
 # A Simple and Fast Implementation of Faster R-CNN
 
-##  Introduction
+## 1. Introduction
 
 This project is a **Simplified** Faster R-CNN implementation based on [chainercv](https://github.com/chainer/chainercv) and other [projects](#acknowledgement) . It aims to:
 
@@ -20,9 +20,9 @@ And it has the following features:
 
 
 
-##  Performance
+## 2. Performance
 
-### mAP
+### 2.1 mAP
 
 VGG16 train on `trainval` and test on `test` split. 
 
@@ -35,7 +35,7 @@ VGG16 train on `trainval` and test on `test` split.
 | train with torchvision pretrained model  | 0.685-0.701 |
 | model converted from [chainercv](https://github.com/chainer/chainercv/tree/master/examples/faster_rcnn) (reported 0.706) |   0.7053    |
 
-### Speed
+### 2.2 Speed
 
 |              Implementation              |   GPU    | Inference | Trainining |
 | :--------------------------------------: | :------: | :-------: | :--------: |
@@ -45,7 +45,7 @@ VGG16 train on `trainval` and test on `test` split.
 
 [1]: make sure you install cupy correctly and only one program run on the GPU. The training speed is sensitive to your gpu status. Morever it's slow in the start of the program.
 It could be even faster by removing visualization, logging, averaging loss etc.
-## Install dependencies
+## 3. Install dependencies
 
 requires python3 and PyTorch 0.3
 
@@ -69,16 +69,16 @@ nohup python3 -m visdom.server &
 ```
 
 
-## Demo
+## 4. Demo
 
 Download pretrained model from [Google Drive](https://drive.google.com/open?id=1cQ27LIn-Rig4-Uayzy_gH5-cW-NRGVzY) or [Baidu Netdisk( passwd: scxn)](https://pan.baidu.com/s/1o87RuXW)
 
 
 See [demo.ipynb](https://github.com/chenyuntc/simple-faster-rcnn-pytorch/blob/master/demo.ipynb) for more detail.
 
-## Train
+## 5. Train
 
-### Prepare data
+### 5.1 Prepare data
 
 #### Pascal VOC2007
 
@@ -107,13 +107,13 @@ See [demo.ipynb](https://github.com/chenyuntc/simple-faster-rcnn-pytorch/blob/ma
    # ... and several other directories ...
    ```
 
-4.  specifiy the `voc_data_dir` in `config.py`, or pass it to program using argument like `--voc-data-dir=/path/to/VOCdevkit/VOC2007/` .
+4. modify `voc_data_dir` cfg item in `config.py`, or pass it to program using argument like `--voc-data-dir=/path/to/VOCdevkit/VOC2007/` .
 
 #### COCO
 
 TBD
 
-### Prepare caffe-pretrained vgg16
+### 5.2 Prepare caffe-pretrained vgg16
 
 If you want to use caffe-pretrain model as initial weight, you can run below to get vgg16 weights converted from caffe, which is the same as the origin paper use.
 
@@ -125,13 +125,13 @@ This scripts would download pretrained model and converted it to the format comp
 
 Then you should specify where caffe-pretraind model `vgg16_caffe.pth` stored in `config.py` by setting `caffe_pretrain_path`
 
-If you want to use torchvision pretrained model, you may skip this step.
+If you want to use pretrained model from torchvision, you may skip this step.
 
 **NOTE**, caffe pretrained model has shown slight better performance.
 
 **NOTE**: caffe model require images in BGR 0-255, while torchvision model requires images in RGB and 0-1. See `data/dataset.py`for more detail. 
 
-### begin training
+### 5.3 begin training
 
 ```Bash
 mkdir checkpoints/ # folder for snapshots
@@ -145,19 +145,20 @@ you may refer to `config.py` for more argument.
 
 Some Key arguments:
 
-- `--caffe-pretrain`: use caffe pretrain model  or use torchvision pretrained model (Default: torchvison)
-- `--plot-every=n`: visualize predict, loss etc every n batches.
+- `--caffe-pretrain=False`: use pretrain model from caffe or torchvision (Default: torchvison)
+- `--plot-every=n`: visualize prediction, loss etc every `n` batches.
 - `--env`: visdom env for visualization
 - `--voc_data_dir`: where the VOC data stored
-- `--use-drop`: use dropout in ROI head, default without dropout
+- `--use-drop`: use dropout in RoI head, default False
 - `--use-Adam`: use Adam instead of SGD, default SGD. (You need set a very low `lr` for Adam)
-- `--load-path`: pretrained model path, default `None`, if it's specified, the pretrained model would be loaded.
+- `--load-path`: pretrained model path, default `None`, if it's specified, it would be loaded.
 
+you may open browser, visit `http://<ip>:8097` and see the visualization of training procedure as below:
 
-you may open browser, type:`http://<ip>:8097` and see the visualization of training procedure as below:
 ![visdom](http://7zh43r.com2.z0.glb.clouddn.com/del/visdom-fasterrcnn.png) 
 
-If you're in China and have encounter problem with visdom (i.e. timeout, blank screen), you may refer to [visdom issue](https://github.com/facebookresearch/visdom/issues/111#issuecomment-321743890), and see [troubleshooting](#troubleshooting) for solution.
+If you're in China and encounter problem with visdom (i.e. timeout, blank screen), you may refer to [visdom issue](https://github.com/facebookresearch/visdom/issues/111#issuecomment-321743890), and see [troubleshooting](#troubleshooting) for solution.
+
 ## Troubleshooting
 - visdom
 
@@ -196,8 +197,8 @@ If you're in China and have encounter problem with visdom (i.e. timeout, blank s
 This work builds on many excellent works, which include:
 
 - [Yusuke Niitani's ChainerCV](https://github.com/chainer/chainercv) (mainly)
-- [Ruotian Luo's pytorch-faster-rcnn](https://github.com/ruotianluo/pytorch-faster-rcnn) which based on [ Xinlei Chen's tf-faster-rcnn](https://github.com/endernewton/tf-faster-rcnn)
-- [faster-rcnn.pytorch by Jianwei Yang and Jiasen Lu](https://github.com/jwyang/faster-rcnn.pytorch).It's mainly based on [longcw's faster_rcnn_pytorch](https://github.com/longcw/faster_rcnn_pytorch)
+- [Ruotian Luo's pytorch-faster-rcnn](https://github.com/ruotianluo/pytorch-faster-rcnn) which based on [Xinlei Chen's tf-faster-rcnn](https://github.com/endernewton/tf-faster-rcnn)
+- [faster-rcnn.pytorch by Jianwei Yang and Jiasen Lu](https://github.com/jwyang/faster-rcnn.pytorch).It mainly refer to [longcw's faster_rcnn_pytorch](https://github.com/longcw/faster_rcnn_pytorch)
 - All the above Repositories have referred to [py-faster-rcnn by Ross Girshick and Sean Bell](https://github.com/rbgirshick/py-faster-rcnn)  either directly or indirectly. 
 
 ## ^_^
@@ -210,4 +211,4 @@ If you encounter any problem, feel free to open an issue.
 Correct me if anything is wrong or unclear.
 
 model structure
-![img](http://7zh43r.com2.z0.glb.clouddn.com/del/model-all.svg)
+![img](https://raw.githubusercontent.com/chenyuntc/cloud/master/faster-rcnn的副本的副本.png)
