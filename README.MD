@@ -43,8 +43,9 @@ VGG16 train on `trainval` and test on `test` split.
 |                 This[1]                  | TITAN Xp | 14-15 fps |   6 fps    |
 | [pytorch-faster-rcnn](https://github.com/ruotianluo/pytorch-faster-rcnn) | TITAN Xp | 15-17fps  |    6fps    |
 
-[1]: make sure you install cupy correctly and only one program run on the GPU. The training speed is sensitive to your gpu status. Morever it's slow in the start of the program.
-It could be even faster by removing visualization, logging, averaging loss etc.
+[1]: make sure you install cupy correctly and only one program run on the GPU. The training speed is sensitive to your gpu status. see [troubleshooting](troubleshooting) for more info. Morever it's slow in the start of the program. 
+
+It could be faster by removing visualization, logging, averaging loss etc.
 ## 3. Install dependencies
 
 requires python3 and PyTorch 0.3
@@ -184,7 +185,11 @@ If you're in China and encounter problem with visdom (i.e. timeout, blank screen
   
   You don't need to build from source, modifying related files would be OK.
 
+- About the speed
 
+  One strange thing is that, even the code doesn't use chainer, but if I remove `from chainer import cuda`, the speed drops a lot (train 6.5->6.1,test 14.5->10), because Chainer replaces the default allocator of CuPy by its memory pool implementation. But ever since V4.0, cupy use memory pool as default. However you need to build from souce if you are gona use the latest version of cupy (uninstall cupy -> git clone -> git checkout v4.0 -> setup.py install) @_@
+
+  Another simple fix: add `from chainer import cuda` at the begining of `train.py`. in such case,you'll need to `pip install chainer` first.
 ## More
 
 - [ ] training on coco
