@@ -52,12 +52,9 @@ def preprocess(img, min_size=600, max_size=1000):
     Args:
         img (~numpy.ndarray): An image. This is in CHW and RGB format.
             The range of its value is :math:`[0, 255]`.
-         (~numpy.ndarray): An image. This is in CHW and RGB format.
-            The range of its value is :math:`[0, 255]`.
 
     Returns:
-        ~numpy.ndarray:
-        A preprocessed image.
+        ~numpy.ndarray: A preprocessed image.
 
     """
     C, H, W = img.shape
