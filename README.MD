@@ -108,7 +108,7 @@ See [demo.ipynb](https://github.com/chenyuntc/simple-faster-rcnn-pytorch/blob/ma
    # ... and several other directories ...
    ```
 
-4. modify `voc_data_dir` cfg item in `config.py`, or pass it to program using argument like `--voc-data-dir=/path/to/VOCdevkit/VOC2007/` .
+4. modify `voc_data_dir` cfg item in `utils/config.py`, or pass it to program using argument like `--voc-data-dir=/path/to/VOCdevkit/VOC2007/` .
 
 #### COCO
 
@@ -124,7 +124,7 @@ python misc/convert_caffe_pretrain.py
 
 This scripts would download pretrained model and converted it to the format compatible with torchvision. 
 
-Then you should specify where caffe-pretraind model `vgg16_caffe.pth` stored in `config.py` by setting `caffe_pretrain_path`
+Then you should specify where caffe-pretraind model `vgg16_caffe.pth` stored in `utils/config.py` by setting `caffe_pretrain_path`
 
 If you want to use pretrained model from torchvision, you may skip this step.
 
@@ -142,7 +142,7 @@ mkdir checkpoints/ # folder for snapshots
 python3 train.py train --env='fasterrcnn-caffe' --plot-every=100 --caffe-pretrain    
 ```
 
-you may refer to `config.py` for more argument.
+you may refer to `utils/config.py` for more argument.
 
 Some Key arguments:
 
