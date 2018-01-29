@@ -71,6 +71,7 @@ def train(**kwargs):
 
     trainer.vis.text(dataset.db.label_names, win='labels')
     best_map = 0
+    lr_ = opt.lr
     for epoch in range(opt.epoch):
         trainer.reset_meters()
         for ii, (img, bbox_, label_, scale) in tqdm(enumerate(dataloader)):
@@ -113,9 +114,9 @@ def train(**kwargs):
         if epoch == 9:
             trainer.load(best_path)
             trainer.faster_rcnn.scale_lr(opt.lr_decay)
+            lr_ = lr_ * opt.lr_decay
 
         trainer.vis.plot('test_map', eval_result['map'])
-        lr_ = trainer.faster_rcnn.optimizer.param_groups[0]['lr']
         log_info = 'lr:{}, map:{},loss:{}'.format(str(lr_),
                                                   str(eval_result['map']),
                                                   str(trainer.get_meter_data()))
