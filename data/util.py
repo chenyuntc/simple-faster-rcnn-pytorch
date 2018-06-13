@@ -167,7 +167,7 @@ def crop_bbox(
     if allow_outside_center:
         mask = np.ones(bbox.shape[0], dtype=bool)
     else:
-        center = (bbox[:, :2] + bbox[:, 2:]) / 2
+        center = (bbox[:, :2] + bbox[:, 2:]) / 2.0
         mask = np.logical_and(crop_bb[:2] <= center, center < crop_bb[2:]) \
             .all(axis=1)
 

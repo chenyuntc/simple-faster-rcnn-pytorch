@@ -15,6 +15,8 @@ sd['classifier.3.bias'] = sd['classifier.4.bias']
 del sd['classifier.4.weight']
 del sd['classifier.4.bias']
 
-
+import  os
 # speicify the path to save
-torch.save(sd, "vgg16_caffe.pth")
+if not os.path.exists('checkpoints'):
+    os.makedirs('checkpoints')
+torch.save(sd, "checkpoints/vgg16_caffe.pth")

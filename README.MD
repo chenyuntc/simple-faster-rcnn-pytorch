@@ -2,6 +2,8 @@
 
 ## 1. Introduction
 
+**I've update the code to support both Python2 and Python3, PyTorch 0.4. If you want the old version code please checkout branch [v0.3]()**
+
 This project is a **Simplified** Faster R-CNN implementation based on [chainercv](https://github.com/chainer/chainercv) and other [projects](#acknowledgement) . It aims to:
 
 - Simplify the code (*Simple is better than complex*)
@@ -43,16 +45,16 @@ VGG16 train on `trainval` and test on `test` split.
 |                 This[1]                  | TITAN Xp | 14-15 fps |   6 fps    |
 | [pytorch-faster-rcnn](https://github.com/ruotianluo/pytorch-faster-rcnn) | TITAN Xp | 15-17fps  |    6fps    |
 
-[1]: make sure you install cupy correctly and only one program run on the GPU. The training speed is sensitive to your gpu status. see [troubleshooting](troubleshooting) for more info. Morever it's slow in the start of the program. 
+[1]: make sure you install cupy correctly and only one program run on the GPU. The training speed is sensitive to your gpu status. see [troubleshooting](troubleshooting) for more info. Morever it's slow in the start of the program -- it need time to warm up.
 
 It could be faster by removing visualization, logging, averaging loss etc.
 ## 3. Install dependencies
 
-requires python3 and PyTorch 0.3
+requires PyTorch >=0.4
 
-- install PyTorch >=0.3 with GPU (code are GPU-only), refer to [official website](http://pytorch.org)
+- install PyTorch >=0.4 with GPU (code are GPU-only), refer to [official website](http://pytorch.org)
 
-- install cupy, you can install via `pip install` but it's better to read the [docs](https://docs-cupy.chainer.org/en/latest/install.html#install-cupy-with-cudnn-and-nccl) and make sure the environ is correctly set
+- install cupy, you can install via `pip install cupy-cuda80` or(cupy-cuda90,cupy-cuda91).
 
 - install other dependencies:  `pip install -r requirements.txt `
 
@@ -60,13 +62,14 @@ requires python3 and PyTorch 0.3
 
   ```Bash
   cd model/utils/nms/
-  python3 build.py build_ext --inplace
+  python build.py build_ext --inplace
+  cd -
   ```
 
-- start vidom for visualization
+- start visdom for visualization
 
 ```Bash
-nohup python3 -m visdom.server &
+nohup python -m visdom.server &
 ```
 
 
@@ -124,7 +127,7 @@ python misc/convert_caffe_pretrain.py
 
 This scripts would download pretrained model and converted it to the format compatible with torchvision. 
 
-Then you should specify where caffe-pretraind model `vgg16_caffe.pth` stored in `utils/config.py` by setting `caffe_pretrain_path`
+Then you could specify where caffe-pretraind model `vgg16_caffe.pth` stored in `utils/config.py` by setting `caffe_pretrain_path`. The default path is ok.
 
 If you want to use pretrained model from torchvision, you may skip this step.
 
@@ -139,7 +142,7 @@ mkdir checkpoints/ # folder for snapshots
 ```
 
 ```bash
-python3 train.py train --env='fasterrcnn-caffe' --plot-every=100 --caffe-pretrain    
+python train.py train --env='fasterrcnn-caffe' --plot-every=100 --caffe-pretrain
 ```
 
 you may refer to `utils/config.py` for more argument.
@@ -156,47 +159,25 @@ Some Key arguments:
 
 you may open browser, visit `http://<ip>:8097` and see the visualization of training procedure as below:
 
-![visdom](http://7zh43r.com2.z0.glb.clouddn.com/del/visdom-fasterrcnn.png) 
-
-If you're in China and encounter problem with visdom (i.e. timeout, blank screen), you may refer to [visdom issue](https://github.com/facebookresearch/visdom/issues/111#issuecomment-321743890), and see [troubleshooting](#troubleshooting) for solution.
+![visdom](http://7zh43r.com2.z0.glb.clouddn.com/del/visdom-fasterrcnn.png)
 
 ## Troubleshooting
-- visdom
-
-  Some js files in visdom was blocked in China, see simple solution [here](https://github.com/chenyuntc/PyTorch-book/blob/master/README.md#visdom打不开及其解决方案)
-
-  Also, `updata=append` doesn't work due to a bug brought in latest version, see [issue](https://github.com/facebookresearch/visdom/issues/233) and [fix](https://github.com/facebookresearch/visdom/pull/234/files)
-
-  You don't need to build from source, modifying related files would be OK.
 
 - dataloader: `received 0 items of ancdata` 
 
   see [discussion](https://github.com/pytorch/pytorch/issues/973#issuecomment-346405667), It's alreadly fixed in [train.py](https://github.com/chenyuntc/simple-faster-rcnn-pytorch/blob/master/train.py#L17-L22). So I think you are free from this problem.
   
-- cupy `numpy.core._internal.AxisError: axis 1 out of bounds [0, 1)`
+- Windows support
+ 
+  I don't have windows machine with GPU to debug and test it. It's welcome if anyone could make a pull request and test it.
 
-  bug of cupy, see [issue](https://github.com/cupy/cupy/issues/793), fix via [pull request](https://github.com/cupy/cupy/pull/749)
-
-  You don't need to build from source, modifying related files would be OK.
-
-- VGG: Slow in construction
-
-  VGG16 is slow in construction(i.e. 9 seconds),it could be speed up by this [PR](https://github.com/pytorch/vision/pull/377)
-  
-  You don't need to build from source, modifying related files would be OK.
-
-- About the speed
-
-  One strange thing is that, even the code doesn't use chainer, but if I remove `from chainer import cuda`, the speed drops a lot (train 6.5->6.1,test 14.5->10), because Chainer replaces the default allocator of CuPy by its memory pool implementation. But ever since V4.0, cupy use memory pool as default. However you need to build from souce if you are gona use the latest version of cupy (uninstall cupy -> git clone -> git checkout v4.0 -> setup.py install) @_@
-
-  Another simple fix: add `from chainer import cuda` at the begining of `train.py`. in such case,you'll need to `pip install chainer` first.
 ## More
 
 - [ ] training on coco
 - [ ] resnet
 - [ ] Maybe；replace cupy with THTensor+cffi?
 - [ ] Maybe：Convert all numpy code to tensor?
-- [ ] check python2-compatibility
+- [x] python2-compatibility
 
 ## Acknowledgement
 This work builds on many excellent works, which include:
@@ -211,7 +192,7 @@ Licensed under MIT, see the LICENSE for more detail.
 
 Contribution Welcome.
 
-If you encounter any problem, feel free to open an issue.
+If you encounter any problem, feel free to open an issue, but too busy lately.
 
 Correct me if anything is wrong or unclear.
 
