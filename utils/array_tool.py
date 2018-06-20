@@ -8,8 +8,8 @@ import numpy as np
 def tonumpy(data):
     if isinstance(data, np.ndarray):
         return data
-    if isinstance(data, t._TensorBase):
-        return data.cpu().numpy()
+    if isinstance(data, t._C._TensorBase):
+        return data.cpu().detach().numpy()
     if isinstance(data, t.autograd.Variable):
         return tonumpy(data.data)
 
@@ -17,7 +17,7 @@ def tonumpy(data):
 def totensor(data, cuda=True):
     if isinstance(data, np.ndarray):
         tensor = t.from_numpy(data)
-    if isinstance(data, t._TensorBase):
+    if isinstance(data, t._C._TensorBase):
         tensor = data
     if isinstance(data, t.autograd.Variable):
         tensor = data.data
@@ -29,7 +29,7 @@ def totensor(data, cuda=True):
 def tovariable(data):
     if isinstance(data, np.ndarray):
         return tovariable(totensor(data))
-    if isinstance(data, t._TensorBase):
+    if isinstance(data, t._C._TensorBase):
         return t.autograd.Variable(data)
     if isinstance(data, t.autograd.Variable):
         return data
@@ -40,7 +40,7 @@ def tovariable(data):
 def scalar(data):
     if isinstance(data, np.ndarray):
         return data.reshape(1)[0]
-    if isinstance(data, t._TensorBase):
+    if isinstance(data, t._C._TensorBase):
         return data.view(1)[0]
     if isinstance(data, t.autograd.Variable):
         return data.data.view(1)[0]
