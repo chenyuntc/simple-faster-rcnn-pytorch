@@ -1,8 +1,10 @@
+from __future__ import  absolute_import
+from __future__ import  division
 import torch as t
-from .voc_dataset import VOCBboxDataset
+from data.voc_dataset import VOCBboxDataset
 from skimage import transform as sktsf
 from torchvision import transforms as tvtsf
-from . import util
+from data import util
 import numpy as np
 from utils.config import opt
 

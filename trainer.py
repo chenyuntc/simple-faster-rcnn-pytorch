@@ -1,3 +1,5 @@
+from __future__ import  absolute_import
+import os
 from collections import namedtuple
 import time
 from torch.nn import functional as F
@@ -5,7 +7,6 @@ from model.utils.creator_tool import AnchorTargetCreator, ProposalTargetCreator
 
 from torch import nn
 import torch as t
-from torch.autograd import Variable
 from utils import array_tool as at
 from utils.vis_tool import Visualizer
 
@@ -126,8 +127,8 @@ class FasterRCNNTrainer(nn.Module):
             at.tonumpy(bbox),
             anchor,
             img_size)
-        gt_rpn_label = at.tovariable(gt_rpn_label).long()
-        gt_rpn_loc = at.tovariable(gt_rpn_loc)
+        gt_rpn_label = at.totensor(gt_rpn_label).long()
+        gt_rpn_loc = at.totensor(gt_rpn_loc)
         rpn_loc_loss = _fast_rcnn_loc_loss(
             rpn_loc,
             gt_rpn_loc,
@@ -145,8 +146,8 @@ class FasterRCNNTrainer(nn.Module):
         roi_cls_loc = roi_cls_loc.view(n_sample, -1, 4)
         roi_loc = roi_cls_loc[t.arange(0, n_sample).long().cuda(), \
                               at.totensor(gt_roi_label).long()]
-        gt_roi_label = at.tovariable(gt_roi_label).long()
-        gt_roi_loc = at.tovariable(gt_roi_loc)
+        gt_roi_label = at.totensor(gt_roi_label).long()
+        gt_roi_loc = at.totensor(gt_roi_loc)
 
         roi_loc_loss = _fast_rcnn_loc_loss(
             roi_loc.contiguous(),
@@ -199,6 +200,10 @@ class FasterRCNNTrainer(nn.Module):
             for k_, v_ in kwargs.items():
                 save_path += '_%s' % v_
 
+        save_dir = os.path.dirname(save_path)
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
         t.save(save_dict, save_path)
         self.vis.save([self.vis.env])
         return save_path
@@ -236,7 +241,6 @@ def _smooth_l1_loss(x, t, in_weight, sigma):
     diff = in_weight * (x - t)
     abs_diff = diff.abs()
     flag = (abs_diff.data < (1. / sigma2)).float()
-    flag = Variable(flag)
     y = (flag * (sigma2 / 2.) * (diff ** 2) +
          (1 - flag) * (abs_diff - 0.5 / sigma2))
     return y.sum()
@@ -248,7 +252,7 @@ def _fast_rcnn_loc_loss(pred_loc, gt_loc, gt_label, sigma):
     # NOTE:  unlike origin implementation, 
     # we don't need inside_weight and outside_weight, they can calculate by gt_label
     in_weight[(gt_label > 0).view(-1, 1).expand_as(in_weight).cuda()] = 1
-    loc_loss = _smooth_l1_loss(pred_loc, gt_loc, Variable(in_weight), sigma)
+    loc_loss = _smooth_l1_loss(pred_loc, gt_loc, in_weight.detach(), sigma)
     # Normalize by total number of negtive and positive rois.
-    loc_loss /= (gt_label >= 0).sum()  # ignore gt_label==-1 for rpn_loss
+    loc_loss /= ((gt_label >= 0).sum().float()) # ignore gt_label==-1 for rpn_loss
     return loc_loss

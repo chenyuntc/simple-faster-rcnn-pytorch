@@ -1,3 +1,4 @@
+from __future__ import  absolute_import
 from __future__ import division
 import torch as t
 import numpy as np
@@ -11,6 +12,12 @@ from data.dataset import preprocess
 from torch.nn import functional as F
 from utils.config import opt
 
+
+def nograd(f):
+    def new_f(*args,**kwargs):
+        with t.no_grad():
+           return f(*args,**kwargs)
+    return new_f
 
 class FasterRCNN(nn.Module):
     """Base class for Faster R-CNN.
@@ -176,6 +183,7 @@ class FasterRCNN(nn.Module):
         score = np.concatenate(score, axis=0).astype(np.float32)
         return bbox, label, score
 
+    @nograd
     def predict(self, imgs,sizes=None,visualize=False):
         """Detect objects from images.
 
@@ -220,7 +228,7 @@ class FasterRCNN(nn.Module):
         labels = list()
         scores = list()
         for img, size in zip(prepared_imgs, sizes):
-            img = t.autograd.Variable(at.totensor(img).float()[None], volatile=True)
+            img = at.totensor(img[None]).float()
             scale = img.shape[3] / size[1]
             roi_cls_loc, roi_scores, rois, _ = self(img, scale=scale)
             # We are assuming that batch size is 1.
@@ -246,7 +254,7 @@ class FasterRCNN(nn.Module):
             cls_bbox[:, 0::2] = (cls_bbox[:, 0::2]).clamp(min=0, max=size[0])
             cls_bbox[:, 1::2] = (cls_bbox[:, 1::2]).clamp(min=0, max=size[1])
 
-            prob = at.tonumpy(F.softmax(at.tovariable(roi_score), dim=1))
+            prob = at.tonumpy(F.softmax(at.totensor(roi_score), dim=1))
 
             raw_cls_bbox = at.tonumpy(cls_bbox)
             raw_prob = at.tonumpy(prob)

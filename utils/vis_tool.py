@@ -133,7 +133,7 @@ def fig2data(fig):
     brief Convert a Matplotlib figure to a 4D numpy array with RGBA 
     channels and return it
 
-    @param fig： a matplotlib figure
+    @param fig: a matplotlib figure
     @return a numpy 3D array of RGBA values
     """
     # draw the renderer
@@ -178,7 +178,7 @@ class Visualizer(object):
         self.vis = visdom.Visdom(env=env, **kwargs)
         self._vis_kw = kwargs
 
-        # e.g.（’loss',23） the 23th value of loss
+        # e.g.('loss',23) the 23th value of loss
         self.index = {}
         self.log_text = ''
 
@@ -221,7 +221,7 @@ class Visualizer(object):
         self.img('input_imgs',t.Tensor(3,64,64))
         self.img('input_imgs',t.Tensor(100,1,64,64))
         self.img('input_imgs',t.Tensor(100,3,64,64),nrows=10)
-        ！！！don‘t ~~self.img('input_imgs',t.Tensor(100,64,64),nrows=10)~~！！！
+        !!don't ~~self.img('input_imgs',t.Tensor(100,64,64),nrows=10)~~!!
         """
         self.vis.images(t.Tensor(img_).cpu().numpy(),
                         win=name,

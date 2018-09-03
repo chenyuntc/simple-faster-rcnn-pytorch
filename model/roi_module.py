@@ -27,10 +27,6 @@ def GET_BLOCKS(N, K=CUDA_NUM_THREADS):
 
 
 class RoI(Function):
-    """
-    NOTE：only CUDA-compatible
-    """
-
     def __init__(self, outh, outw, spatial_scale):
         self.forward_fn = load_kernel('roi_forward', kernel_forward)
         self.backward_fn = load_kernel('roi_backward', kernel_backward)
@@ -104,8 +100,9 @@ def test_roi_module():
 
     # pytorch version
     module = RoIPooling2D(outh, outw, spatial_scale)
-    x = t.autograd.Variable(bottom_data, requires_grad=True)
-    rois = t.autograd.Variable(bottom_rois)
+    x = bottom_data.requires_grad_()
+    rois = bottom_rois.detach()
+
     output = module(x, rois)
     output.sum().backward()
 

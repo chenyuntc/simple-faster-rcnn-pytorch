@@ -7,7 +7,6 @@ from tqdm import tqdm
 from utils.config import opt
 from data.dataset import Dataset, TestDataset
 from model import FasterRCNNVGG16
-from torch.autograd import Variable
 from torch.utils import data as data_
 from trainer import FasterRCNNTrainer
 from utils import array_tool as at
@@ -68,7 +67,6 @@ def train(**kwargs):
         for ii, (img, bbox_, label_, scale, ori_img) in tqdm(enumerate(dataloader)):
             scale = at.scalar(scale)
             img, bbox, label = img.cuda().float(), bbox_.cuda(), label_.cuda()
-            img, bbox, label = Variable(img), Variable(bbox), Variable(label)
             losses = trainer.train_step(img, bbox, label, scale)
 
             if (ii + 1) % opt.plot_every == 0:

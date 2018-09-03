@@ -48,7 +48,7 @@ class Config:
     load_path = None
 
     caffe_pretrain = False # use caffe pretrained model instead of torchvision
-    caffe_pretrain_path = 'checkpoints/vgg16-caffe.pth'
+    caffe_pretrain_path = 'checkpoints/vgg16_caffe.pth'
 
     def _parse(self, kwargs):
         state_dict = self._state_dict()

@@ -1,3 +1,4 @@
+from __future__ import  absolute_import
 import torch as t
 from torch import nn
 from torchvision.models import vgg16
@@ -136,7 +137,7 @@ class VGG16RoIHead(nn.Module):
         indices_and_rois = t.cat([roi_indices[:, None], rois], dim=1)
         # NOTE: important: yx->xy
         xy_indices_and_rois = indices_and_rois[:, [0, 2, 1, 4, 3]]
-        indices_and_rois = t.autograd.Variable(xy_indices_and_rois.contiguous())
+        indices_and_rois =  xy_indices_and_rois.contiguous()
 
         pool = self.roi(x, indices_and_rois)
         pool = pool.view(pool.size(0), -1)
