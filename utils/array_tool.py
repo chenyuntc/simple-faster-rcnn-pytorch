@@ -26,4 +26,4 @@ def scalar(data):
     if isinstance(data, np.ndarray):
         return data.reshape(1)[0]
     if isinstance(data, t.Tensor):
-        return data.view(1)[0].item()
+        return data.item()

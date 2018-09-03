@@ -112,8 +112,9 @@ class RegionProposalNetwork(nn.Module):
         rpn_locs = rpn_locs.permute(0, 2, 3, 1).contiguous().view(n, -1, 4)
         rpn_scores = self.score(h)
         rpn_scores = rpn_scores.permute(0, 2, 3, 1).contiguous()
+        rpn_softmax_scores = F.softmax(rpn_scores, dim=3)
         rpn_fg_scores = \
-            rpn_scores.view(n, hh, ww, n_anchor, 2)[:, :, :, :, 1].contiguous()
+            rpn_softmax_scores.view(n, hh, ww, n_anchor, 2)[:, :, :, :, 1].contiguous()
         rpn_fg_scores = rpn_fg_scores.view(n, -1)
         rpn_scores = rpn_scores.view(n, -1, 2)
 
