@@ -2,7 +2,7 @@
 
 ## 1. Introduction
 
-**I've update the code to support both Python2 and Python3, PyTorch 0.4. If you want the old version code please checkout branch [v0.3]()**
+**I've update the code to support both Python2 and Python3, PyTorch 0.4. If you want the old version code please checkout branch [v0.3](https://github.com/chenyuntc/simple-faster-rcnn-pytorch/tree/0.3)**
 
 This project is a **Simplified** Faster R-CNN implementation based on [chainercv](https://github.com/chainer/chainercv) and other [projects](#acknowledgement) . It aims to:
 
@@ -54,7 +54,7 @@ requires PyTorch >=0.4
 
 - install PyTorch >=0.4 with GPU (code are GPU-only), refer to [official website](http://pytorch.org)
 
-- install cupy, you can install via `pip install cupy-cuda80` or(cupy-cuda90,cupy-cuda91).
+- install cupy, you can install via `pip install cupy-cuda80` or(cupy-cuda90,cupy-cuda91, etc).
 
 - install other dependencies:  `pip install -r requirements.txt `
 
@@ -113,9 +113,6 @@ See [demo.ipynb](https://github.com/chenyuntc/simple-faster-rcnn-pytorch/blob/ma
 
 4. modify `voc_data_dir` cfg item in `utils/config.py`, or pass it to program using argument like `--voc-data-dir=/path/to/VOCdevkit/VOC2007/` .
 
-#### COCO
-
-TBD
 
 ### 5.2 Prepare caffe-pretrained vgg16
 
