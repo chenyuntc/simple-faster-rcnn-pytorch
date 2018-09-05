@@ -122,7 +122,7 @@ If you want to use caffe-pretrain model as initial weight, you can run below to 
 python misc/convert_caffe_pretrain.py
 ````
 
-This scripts would download pretrained model and converted it to the format compatible with torchvision. 
+This scripts would download pretrained model and converted it to the format compatible with torchvision. If you are in China and can not download the pretrain model, you may refer to [this issue](https://github.com/chenyuntc/simple-faster-rcnn-pytorch/issues/63)
 
 Then you could specify where caffe-pretraind model `vgg16_caffe.pth` stored in `utils/config.py` by setting `caffe_pretrain_path`. The default path is ok.
 
