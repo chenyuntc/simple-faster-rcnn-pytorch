@@ -122,11 +122,6 @@ def train(**kwargs):
             trainer.faster_rcnn.scale_lr(opt.lr_decay)
             lr_ = lr_ * opt.lr_decay
 
-        trainer.vis.plot('test_map', eval_result['map'])
-        log_info = 'lr:{}, map:{},loss:{}'.format(str(lr_),
-                                                  str(eval_result['map']),
-                                                  str(trainer.get_meter_data()))
-        trainer.vis.log(log_info)
         if epoch == 13: 
             break
 
