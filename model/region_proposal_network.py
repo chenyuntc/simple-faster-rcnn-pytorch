@@ -40,7 +40,13 @@ class RegionProposalNetwork(nn.Module):
         :class:`~model.utils.creator_tools.ProposalCreator`
 
     """
-
+    '''
+    Anchor是大小和尺寸固定的候选框。
+    论文中用到的anchor有三种尺寸和三种比例，
+    - 三种尺寸分别是小（蓝128）中（红256）大（绿512），
+    - 三个比例分别是1:1，1:2，2:1。
+    3×3的组合总共有9种anchor。
+    '''
     def __init__(
             self, in_channels=512, mid_channels=512, ratios=[0.5, 1, 2],
             anchor_scales=[8, 16, 32], feat_stride=16,
@@ -52,6 +58,12 @@ class RegionProposalNetwork(nn.Module):
         self.feat_stride = feat_stride
         self.proposal_layer = ProposalCreator(self, **proposal_creator_params)
         n_anchor = self.anchor_base.shape[0]
+        '''
+        RPN在Extractor输出的feature maps的基础之上，先增加了一个卷积，
+        然后利用两个1x1的卷积分别进行二分类（是否为正样本）和位置回归。
+        进行分类的卷积核通道数为9×2（9个anchor，每个anchor二分类，使用交叉熵损失），
+        进行回归的卷积核通道数为9×4（9个anchor，每个anchor有4个位置参数）。
+        '''
         self.conv1 = nn.Conv2d(in_channels, mid_channels, 3, 1, 1)
         self.score = nn.Conv2d(mid_channels, n_anchor * 2, 1, 1, 0)
         self.loc = nn.Conv2d(mid_channels, n_anchor * 4, 1, 1, 0)

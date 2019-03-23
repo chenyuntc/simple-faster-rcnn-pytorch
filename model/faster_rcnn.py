@@ -14,9 +14,9 @@ from utils.config import opt
 
 
 def nograd(f):
-    def new_f(*args,**kwargs):
+    def new_f(*args, **kwargs):
         with t.no_grad():
-           return f(*args,**kwargs)
+           return f(*args, **kwargs)
     return new_f
 
 class FasterRCNN(nn.Module):
@@ -44,7 +44,7 @@ class FasterRCNN(nn.Module):
     :meth:`__call__` is provided for a scnerario when intermediate outputs
     are needed, for instance, for training and debugging.
 
-    Links that support obejct detection API have method :meth:`predict` with
+    Links that support object detection API have method :meth:`predict` with
     the same interface. Please refer to :meth:`predict` for
     further details.
 

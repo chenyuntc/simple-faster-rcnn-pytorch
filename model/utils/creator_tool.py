@@ -157,7 +157,12 @@ class AnchorTargetCreator(object):
             sampled regions.
 
     """
-
+    '''
+    RPN做的事情就是利用（AnchorTargetCreator）将20000多个候选的anchor选出256个anchor进行分类和回归位置。选择过程如下：
+    对于每一个ground truth bounding box (gt_bbox)，选择和它重叠度（IoU）最高的一个anchor作为正样本
+    对于剩下的anchor，从中选择和任意一个gt_bbox重叠度超过0.7的anchor，作为正样本，正样本的数目不超过128个。
+    随机选择和gt_bbox重叠度小于0.3的anchor作为负样本。负样本和正样本的总数为256。
+    '''
     def __init__(self,
                  n_sample=256,
                  pos_iou_thresh=0.7, neg_iou_thresh=0.3,

@@ -94,8 +94,17 @@ class FasterRCNNTrainer(nn.Module):
         _, _, H, W = imgs.shape
         img_size = (H, W)
 
+        '''
+        Extractor
+        Extractor使用的是预训练好的模型提取图片的特征。
+        论文中主要使用的是Caffe的预训练模型VGG16。修改如下：为了节省显存，前四层卷积层的学习率设为0。Conv5_3的输出作为图片特征（feature）。
+        conv5_3相比于输入，下采样了16倍，也就是说输入的图片尺寸为3×H×W，那么feature的尺寸就是C×(H/16)×(W/16)。
+        VGG最后的三层全连接层的前两层，一般用来初始化RoIHead的部分参数，
+        总之，一张图片，经过extractor之后，会得到一个C×(H/16)×(W/16)的feature map。
+        '''
         features = self.faster_rcnn.extractor(imgs)
 
+        # 提取完特征后，在feature map上使用rpn获得RoI
         rpn_locs, rpn_scores, rois, roi_indices, anchor = \
             self.faster_rcnn.rpn(features, img_size, scale)
 
@@ -109,6 +118,12 @@ class FasterRCNNTrainer(nn.Module):
         # Sample RoIs and forward
         # it's fine to break the computation graph of rois, 
         # consider them as constant input
+
+        '''
+        ProposalTargetCreator： 
+        负责在训练RoIHead/Fast R-CNN的时候，从RoIs选择一部分(比如128个)用以训练。
+        同时给定训练目标, 返回（sample_RoI, gt_RoI_loc, gt_RoI_label）
+        '''
         sample_roi, gt_roi_loc, gt_roi_label = self.proposal_target_creator(
             roi,
             at.tonumpy(bbox),
@@ -117,11 +132,20 @@ class FasterRCNNTrainer(nn.Module):
             self.loc_normalize_std)
         # NOTE it's all zero because now it only support for batch=1 now
         sample_roi_index = t.zeros(len(sample_roi))
+
         roi_cls_loc, roi_score = self.faster_rcnn.head(
             features,
             sample_roi,
             sample_roi_index)
-
+        '''
+        采用近似联合训练（Approximate joint training），端到端，一步到位，速度更快。
+        在训练Faster RCNN的时候有四个损失：
+        RPN 分类损失：anchor是否为前景（二分类）
+        RPN位置回归损失：anchor位置微调
+        RoI分类损失：RoI所属类别（21分类，多了一个类作为背景）
+        RoI位置回归损失：继续对RoI位置微调
+        四个损失相加作为最后的损失，反向传播，更新参数。
+        '''
         # ------------------ RPN losses -------------------#
         gt_rpn_loc, gt_rpn_label = self.anchor_target_creator(
             at.tonumpy(bbox),
