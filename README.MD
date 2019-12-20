@@ -18,7 +18,7 @@ And it has the following features:
 - It's memory-efficient (about 3GB for vgg16)
 
 
-![img](http://7zh43r.com1.z0.glb.clouddn.com/del/faster-speed.jpg)
+![img](imgs/faster-speed.jpg)
 
 
 
@@ -156,7 +156,7 @@ Some Key arguments:
 
 you may open browser, visit `http://<ip>:8097` and see the visualization of training procedure as below:
 
-![visdom](http://7zh43r.com2.z0.glb.clouddn.com/del/visdom-fasterrcnn.png)
+![visdom](imgs/visdom-fasterrcnn.png)
 
 ## Troubleshooting
 
@@ -194,4 +194,4 @@ If you encounter any problem, feel free to open an issue, but too busy lately.
 Correct me if anything is wrong or unclear.
 
 model structure
-![img](https://raw.githubusercontent.com/chenyuntc/cloud/master/faster-rcnn的副本的副本.png)
+![img](imgs/model_all.png)
