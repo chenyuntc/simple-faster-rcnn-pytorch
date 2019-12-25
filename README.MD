@@ -2,7 +2,7 @@
 
 ## 1. Introduction
 
-**I've update the code to support both Python2 and Python3, PyTorch 0.4. If you want the old version code please checkout branch [v0.3](https://github.com/chenyuntc/simple-faster-rcnn-pytorch/tree/0.3)**
+**I've update the code to support both Python2 and Python3, PyTorch 1.0. If you want the old version code please checkout branch [v0.3](https://github.com/chenyuntc/simple-faster-rcnn-pytorch/tree/0.3)**
 
 This project is a **Simplified** Faster R-CNN implementation based on [chainercv](https://github.com/chainer/chainercv) and other [projects](#acknowledgement) . It aims to:
 
