@@ -31,7 +31,7 @@ class RoI(Function):
         self.forward_fn = load_kernel('roi_forward', kernel_forward)
         self.backward_fn = load_kernel('roi_backward', kernel_backward)
         self.outh, self.outw, self.spatial_scale = outh, outw, spatial_scale
-
+    
     def forward(self, x, rois):
         # NOTE: MAKE SURE input is contiguous too
         x = x.contiguous()
@@ -53,7 +53,7 @@ class RoI(Function):
                         grid=(GET_BLOCKS(output.numel()), 1, 1),
                         stream=stream)
         return output
-
+    
     def backward(self, grad_output):
         ##NOTE: IMPORTANT CONTIGUOUS
         # TODO: input
@@ -76,11 +76,11 @@ class RoI(Function):
 
 
 class RoIPooling2D(t.nn.Module):
-
+    
     def __init__(self, outh, outw, spatial_scale):
         super(RoIPooling2D, self).__init__()
         self.RoI = RoI(outh, outw, spatial_scale)
-
+    
     def forward(self, x, rois):
         return self.RoI(x, rois)
 
@@ -88,7 +88,7 @@ class RoIPooling2D(t.nn.Module):
 def test_roi_module():
     ## fake data###
     B, N, C, H, W, PH, PW = 2, 8, 4, 32, 32, 7, 7
-
+    
     bottom_data = t.randn(B, C, H, W).cuda()
     bottom_rois = t.randn(N, 5)
     bottom_rois[:int(N / 2), 0] = 0
@@ -97,30 +97,30 @@ def test_roi_module():
     bottom_rois = bottom_rois.cuda()
     spatial_scale = 1. / 16
     outh, outw = PH, PW
-
+    
     # pytorch version
     module = RoIPooling2D(outh, outw, spatial_scale)
     x = bottom_data.requires_grad_()
     rois = bottom_rois.detach()
-
+    
     output = module(x, rois)
     output.sum().backward()
-
+    
     def t2c(variable):
         npa = variable.data.cpu().numpy()
         return cp.array(npa)
-
+    
     def test_eq(variable, array, info):
         cc = cp.asnumpy(array)
         neq = (cc != variable.data.cpu().numpy())
         assert neq.sum() == 0, 'test failed: %s' % info
-
+    
     # chainer version,if you're going to run this
     # pip install chainer 
     import chainer.functions as F
     from chainer import Variable
     x_cn = Variable(t2c(x))
-
+    
     o_cn = F.roi_pooling_2d(x_cn, t2c(rois), outh, outw, spatial_scale)
     test_eq(output, o_cn.array, 'forward')
     F.sum(o_cn).backward()

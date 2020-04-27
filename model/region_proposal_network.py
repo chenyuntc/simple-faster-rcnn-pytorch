@@ -40,7 +40,7 @@ class RegionProposalNetwork(nn.Module):
         :class:`~model.utils.creator_tools.ProposalCreator`
 
     """
-
+    
     def __init__(
             self, in_channels=512, mid_channels=512, ratios=[0.5, 1, 2],
             anchor_scales=[8, 16, 32], feat_stride=16,
@@ -58,7 +58,7 @@ class RegionProposalNetwork(nn.Module):
         normal_init(self.conv1, 0, 0.01)
         normal_init(self.score, 0, 0.01)
         normal_init(self.loc, 0, 0.01)
-
+    
     def forward(self, x, img_size, scale=1.):
         """Forward Region Proposal Network.
 
@@ -102,10 +102,10 @@ class RegionProposalNetwork(nn.Module):
         anchor = _enumerate_shifted_anchor(
             np.array(self.anchor_base),
             self.feat_stride, hh, ww)
-
+        
         n_anchor = anchor.shape[0] // (hh * ww)
         h = F.relu(self.conv1(x))
-
+        
         rpn_locs = self.loc(h)
         # UNNOTE: check whether need contiguous
         # A: Yes
@@ -116,7 +116,7 @@ class RegionProposalNetwork(nn.Module):
         rpn_fg_scores = rpn_softmax_scores[:, :, :, :, 1].contiguous()
         rpn_fg_scores = rpn_fg_scores.view(n, -1)
         rpn_scores = rpn_scores.view(n, -1, 2)
-
+        
         rois = list()
         roi_indices = list()
         for i in range(n):
@@ -128,7 +128,7 @@ class RegionProposalNetwork(nn.Module):
             batch_index = i * np.ones((len(roi),), dtype=np.int32)
             rois.append(roi)
             roi_indices.append(batch_index)
-
+        
         rois = np.concatenate(rois, axis=0)
         roi_indices = np.concatenate(roi_indices, axis=0)
         return rpn_locs, rpn_scores, rois, roi_indices, anchor
@@ -142,7 +142,7 @@ def _enumerate_shifted_anchor(anchor_base, feat_stride, height, width):
     # shift anchors (K, A, 4)
     # reshape to (K*A, 4) shifted anchors
     # return (K*A, 4)
-
+    
     # !TODO: add support for torch.CudaTensor
     # xp = cuda.get_array_module(anchor_base)
     # it seems that it can't be boosed using GPU
@@ -152,7 +152,7 @@ def _enumerate_shifted_anchor(anchor_base, feat_stride, height, width):
     shift_x, shift_y = xp.meshgrid(shift_x, shift_y)
     shift = xp.stack((shift_y.ravel(), shift_x.ravel(),
                       shift_y.ravel(), shift_x.ravel()), axis=1)
-
+    
     A = anchor_base.shape[0]
     K = shift.shape[0]
     anchor = anchor_base.reshape((1, A, 4)) + \
@@ -169,7 +169,7 @@ def _enumerate_shifted_anchor_torch(anchor_base, feat_stride, height, width):
     # shift anchors (K, A, 4)
     # reshape to (K*A, 4) shifted anchors
     # return (K*A, 4)
-
+    
     # !TODO: add support for torch.CudaTensor
     # xp = cuda.get_array_module(anchor_base)
     import torch as t
@@ -178,7 +178,7 @@ def _enumerate_shifted_anchor_torch(anchor_base, feat_stride, height, width):
     shift_x, shift_y = xp.meshgrid(shift_x, shift_y)
     shift = xp.stack((shift_y.ravel(), shift_x.ravel(),
                       shift_y.ravel(), shift_x.ravel()), axis=1)
-
+    
     A = anchor_base.shape[0]
     K = shift.shape[0]
     anchor = anchor_base.reshape((1, A, 4)) + \
