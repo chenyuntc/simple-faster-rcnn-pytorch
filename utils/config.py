@@ -47,11 +47,11 @@ class Config:
 
     # ckpts
     frc_ckpt_path = None
-    # frc_ckpt_path = '/content/drive/My Drive/lq_od_hyper/lq_od/ckpt/fasterrcnn_12222105_0.712649824453_caffe_pretrain.pth'
+    # frc_ckpt_path = '/content/drive/My Drive/lq_det_hyper/lq_det/ckpt/fasterrcnn_12222105_0.712649824453_caffe_pretrain.pth'
 
     caffe_vgg = False  # use caffe pretrained model instead of torchvision
-    caffe_vgg_path = '/content/drive/My Drive/lq_od_hyper/lq_od/ckpt/vgg16_caffe.pth'
-    torchvision_vgg_path = '/content/drive/My Drive/lq_od_hyper/lq_od/ckpt/vgg16_torchvision.pth'
+    caffe_vgg_path = '/content/drive/My Drive/lq_det_hyper/lq_det/ckpt/vgg16_caffe.pth'
+    torchvision_vgg_path = '/content/drive/My Drive/lq_det_hyper/lq_det/ckpt/vgg16_torchvision.pth'
 
     @classmethod
     def _parse(cls, kwargs):
