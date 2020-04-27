@@ -1,4 +1,4 @@
-from __future__ import  absolute_import
+from __future__ import absolute_import
 from __future__ import division
 import torch as t
 import numpy as np
@@ -14,10 +14,12 @@ from utils.config import Config
 
 
 def nograd(f):
-    def new_f(*args,**kwargs):
+    def new_f(*args, **kwargs):
         with t.no_grad():
-           return f(*args,**kwargs)
+            return f(*args, **kwargs)
+    
     return new_f
+
 
 class FasterRCNN(nn.Module):
     """Base class for Faster R-CNN.
@@ -67,26 +69,26 @@ class FasterRCNN(nn.Module):
             of localization estimates.
 
     """
-
+    
     def __init__(self, extractor, rpn, head,
-                loc_normalize_mean = (0., 0., 0., 0.),
-                loc_normalize_std = (0.1, 0.1, 0.2, 0.2)
-    ):
+                 loc_normalize_mean=(0., 0., 0., 0.),
+                 loc_normalize_std=(0.1, 0.1, 0.2, 0.2)
+                 ):
         super(FasterRCNN, self).__init__()
         self.extractor = extractor
         self.rpn = rpn
         self.head = head
-
+        
         # mean and std
         self.loc_normalize_mean = loc_normalize_mean
         self.loc_normalize_std = loc_normalize_std
         self.use_preset('evaluate')
-
+    
     @property
     def n_class(self):
         # Total number of classes including the background.
         return self.head.n_class
-
+    
     def forward(self, x, scale=1.):
         """Forward Faster R-CNN.
 
@@ -125,14 +127,14 @@ class FasterRCNN(nn.Module):
 
         """
         img_size = x.shape[2:]
-
+        
         h = self.extractor(x)
         rpn_locs, rpn_scores, rois, roi_indices, anchor = \
             self.rpn(h, img_size, scale)
         roi_cls_locs, roi_scores = self.head(
             h, rois, roi_indices)
         return roi_cls_locs, roi_scores, rois, roi_indices
-
+    
     def use_preset(self, preset):
         """Use the given preset during prediction.
 
@@ -159,7 +161,7 @@ class FasterRCNN(nn.Module):
             self.score_thresh = 0.05
         else:
             raise ValueError('preset must be visualize or evaluate')
-
+    
     def _suppress(self, raw_cls_bbox, raw_prob):
         bbox = list()
         label = list()
@@ -182,9 +184,9 @@ class FasterRCNN(nn.Module):
         label = np.concatenate(label, axis=0).astype(np.int32)
         score = np.concatenate(score, axis=0).astype(np.float32)
         return bbox, label, score
-
+    
     @nograd
-    def predict(self, imgs,sizes=None,visualize=False):
+    def predict(self, imgs, sizes=None, visualize=False):
         """Detect objects from images.
 
         This method predicts objects for each image.
@@ -223,7 +225,7 @@ class FasterRCNN(nn.Module):
                 prepared_imgs.append(img)
                 sizes.append(size)
         else:
-             prepared_imgs = imgs 
+            prepared_imgs = imgs
         bboxes = list()
         labels = list()
         scores = list()
@@ -235,14 +237,14 @@ class FasterRCNN(nn.Module):
             roi_score = roi_scores.data
             roi_cls_loc = roi_cls_loc.data
             roi = at.totensor(rois) / scale
-
+            
             # Convert predictions to bounding boxes in image coordinates.
             # Bounding boxes are scaled to the scale of the input images.
             mean = t.Tensor(self.loc_normalize_mean).cuda(). \
                 repeat(self.n_class)[None]
             std = t.Tensor(self.loc_normalize_std).cuda(). \
                 repeat(self.n_class)[None]
-
+            
             roi_cls_loc = (roi_cls_loc * std + mean)
             roi_cls_loc = roi_cls_loc.view(-1, self.n_class, 4)
             roi = roi.view(-1, 1, 4).expand_as(roi_cls_loc)
@@ -253,21 +255,21 @@ class FasterRCNN(nn.Module):
             # clip bounding box
             cls_bbox[:, 0::2] = (cls_bbox[:, 0::2]).clamp(min=0, max=size[0])
             cls_bbox[:, 1::2] = (cls_bbox[:, 1::2]).clamp(min=0, max=size[1])
-
+            
             prob = at.tonumpy(F.softmax(at.totensor(roi_score), dim=1))
-
+            
             raw_cls_bbox = at.tonumpy(cls_bbox)
             raw_prob = at.tonumpy(prob)
-
+            
             bbox, label, score = self._suppress(raw_cls_bbox, raw_prob)
             bboxes.append(bbox)
             labels.append(label)
             scores.append(score)
-
+        
         self.use_preset('evaluate')
         self.train()
         return bboxes, labels, scores
-
+    
     def get_optimizer(self):
         """
         return optimizer, It could be overwriten if you want to specify 
@@ -286,12 +288,8 @@ class FasterRCNN(nn.Module):
         else:
             self.optimizer = t.optim.SGD(params, momentum=0.9)
         return self.optimizer
-
+    
     def scale_lr(self, decay=0.1):
         for param_group in self.optimizer.param_groups:
             param_group['lr'] *= decay
         return self.optimizer
-
-
-
-

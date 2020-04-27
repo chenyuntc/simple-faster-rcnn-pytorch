@@ -1,4 +1,4 @@
-from __future__ import  absolute_import
+from __future__ import absolute_import
 # though cupy is not used but without this line, it raise errors...
 import cupy as cp
 import os
@@ -39,7 +39,7 @@ def eval(dataloader, faster_rcnn, test_num=10000):
         pred_labels += pred_labels_
         pred_scores += pred_scores_
         if ii == test_num: break
-
+    
     result = eval_detection_voc(
         pred_bboxes, pred_labels, pred_scores,
         gt_bboxes, gt_labels, gt_difficults,
@@ -49,7 +49,7 @@ def eval(dataloader, faster_rcnn, test_num=10000):
 
 def train(**kwargs):
     Config._parse(kwargs)
-
+    
     dataset = Dataset(Config)
     print('load data')
     dataloader = data_.DataLoader(dataset, \
@@ -79,21 +79,21 @@ def train(**kwargs):
             scale = at.scalar(scale)
             img, bbox, label = img.cuda().float(), bbox_.cuda(), label_.cuda()
             trainer.train_step(img, bbox, label, scale)
-
+            
             if (ii + 1) % Config.plot_every == 0:
                 if os.path.exists(Config.debug_file):
                     ipdb.set_trace()
-
+                
                 # plot loss
                 trainer.vis.plot_many(trainer.get_meter_data())
-
+                
                 # plot groud truth bboxes
                 ori_img_ = inverse_normalize(at.tonumpy(img[0]))
                 gt_img = visdom_bbox(ori_img_,
                                      at.tonumpy(bbox_[0]),
                                      at.tonumpy(label_[0]))
                 trainer.vis.img('gt_img', gt_img)
-
+                
                 # plot predicti bboxes
                 _bboxes, _labels, _scores = trainer.faster_rcnn.predict([ori_img_], visualize=True)
                 pred_img = visdom_bbox(ori_img_,
@@ -101,7 +101,7 @@ def train(**kwargs):
                                        at.tonumpy(_labels[0]).reshape(-1),
                                        at.tonumpy(_scores[0]))
                 trainer.vis.img('pred_img', pred_img)
-
+                
                 # rpn confusion matrix(meter)
                 trainer.vis.text(str(trainer.rpn_cm.value().tolist()), win='rpn_cm')
                 # roi confusion matrix
@@ -113,7 +113,7 @@ def train(**kwargs):
                                                   str(eval_result['map']),
                                                   str(trainer.get_meter_data()))
         trainer.vis.log(log_info)
-
+        
         if eval_result['map'] > best_map:
             best_map = eval_result['map']
             best_path = trainer.save(best_map=best_map)
@@ -121,12 +121,12 @@ def train(**kwargs):
             trainer.load(best_path)
             trainer.faster_rcnn.scale_lr(Config.lr_decay)
             lr_ = lr_ * Config.lr_decay
-
-        if epoch == 13: 
+        
+        if epoch == 13:
             break
 
 
 if __name__ == '__main__':
     import fire
-
+    
     fire.Fire()

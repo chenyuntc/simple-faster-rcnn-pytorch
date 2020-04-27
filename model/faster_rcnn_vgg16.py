@@ -1,4 +1,4 @@
-from __future__ import  absolute_import
+from __future__ import absolute_import
 import torch as tc
 from torch import nn
 from torchvision.models import vgg16
@@ -33,22 +33,22 @@ def decom_vgg16():
             print(f'download the torchvision vgg ckpt...')
             model = vgg16(pretrained=True)
             print(f'download the torchvision vgg ckpt complete')
-
+    
     features = list(model.features)[:30]
     classifier = model.classifier
-
+    
     classifier = list(classifier)
     del classifier[6]
     if not Config.use_drop:
         del classifier[5]
         del classifier[2]
     classifier = nn.Sequential(*classifier)
-
+    
     # freeze top4 conv
     for layer in features[:10]:
         for p in layer.parameters():
             p.requires_grad = False
-
+    
     return nn.Sequential(*features), classifier
 
 
@@ -67,31 +67,30 @@ class FasterRCNNVGG16(FasterRCNN):
             window.
 
     """
-
+    
     feat_stride = 16  # downsample 16x for output of conv5 in vgg16
-
+    
     def __init__(self,
                  n_fg_class=20,
                  ratios=[0.5, 1, 2],
                  anchor_scales=[8, 16, 32]
                  ):
-                 
         extractor, classifier = decom_vgg16()
-
+        
         rpn = RegionProposalNetwork(
             512, 512,
             ratios=ratios,
             anchor_scales=anchor_scales,
             feat_stride=self.feat_stride,
         )
-
+        
         head = VGG16RoIHead(
             n_class=n_fg_class + 1,
             roi_size=7,
             spatial_scale=(1. / self.feat_stride),
             classifier=classifier
         )
-
+        
         super(FasterRCNNVGG16, self).__init__(
             extractor,
             rpn,
@@ -112,24 +111,24 @@ class VGG16RoIHead(nn.Module):
         classifier (nn.Module): Two layer Linear ported from vgg16
 
     """
-
+    
     def __init__(self, n_class, roi_size, spatial_scale,
                  classifier):
         # n_class includes the background
         super(VGG16RoIHead, self).__init__()
-
+        
         self.classifier = classifier
         self.cls_loc = nn.Linear(4096, n_class * 4)
         self.score = nn.Linear(4096, n_class)
-
+        
         normal_init(self.cls_loc, 0, 0.001)
         normal_init(self.score, 0, 0.01)
-
+        
         self.n_class = n_class
         self.roi_size = roi_size
         self.spatial_scale = spatial_scale
         self.roi = RoIPooling2D(self.roi_size, self.roi_size, self.spatial_scale)
-
+    
     def forward(self, x, rois, roi_indices):
         """Forward the chain.
 
@@ -153,8 +152,8 @@ class VGG16RoIHead(nn.Module):
         indices_and_rois = tc.cat([roi_indices[:, None], rois], dim=1)
         # NOTE: important: yx->xy
         xy_indices_and_rois = indices_and_rois[:, [0, 2, 1, 4, 3]]
-        indices_and_rois =  xy_indices_and_rois.contiguous()
-
+        indices_and_rois = xy_indices_and_rois.contiguous()
+        
         pool = self.roi(x, indices_and_rois)
         pool = pool.view(pool.size(0), -1)
         fc7 = self.classifier(pool)
