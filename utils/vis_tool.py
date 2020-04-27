@@ -113,10 +113,11 @@ def vis_bbox(img, bboxes, labels=None, score=None, ax=None):
         caption = list()
         
         if labels is not None and label_names is not None:
-            label = labels[i]
-            if not (-1 <= label < len(label_names)):  # modfy here to add backgroud
+            label_idx = labels[i]
+            if not (-1 <= label_idx < len(label_names)):  # modfy here to add backgroud
                 raise ValueError('No corresponding name is given')
-            caption.append(label_names[label])
+            label = label_names[label_idx]
+            caption.append(label)
         else:
             label = "UNKNOWN"
         if score is not None:
@@ -125,7 +126,7 @@ def vis_bbox(img, bboxes, labels=None, score=None, ax=None):
         else:
             sc = 0
 
-        print(f'[bboxes@{i}]: {bb}, score={sc:.2f}, label={label}')
+        print(f'==> bbox@{i}: {bb}, score={100*sc:.2f}%%, label={label}({label_idx})')
         
         if len(caption) > 0:
             ax.text(bb[1], bb[0],
