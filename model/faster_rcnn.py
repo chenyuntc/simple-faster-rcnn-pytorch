@@ -10,7 +10,7 @@ from model.utils.nms import non_maximum_suppression
 from torch import nn
 from data.dataset import preprocess
 from torch.nn import functional as F
-from utils.config import opt
+from utils.config import Config
 
 
 def nograd(f):
@@ -273,15 +273,15 @@ class FasterRCNN(nn.Module):
         return optimizer, It could be overwriten if you want to specify 
         special optimizer
         """
-        lr = opt.lr
+        lr = Config.lr
         params = []
         for key, value in dict(self.named_parameters()).items():
             if value.requires_grad:
                 if 'bias' in key:
                     params += [{'params': [value], 'lr': lr * 2, 'weight_decay': 0}]
                 else:
-                    params += [{'params': [value], 'lr': lr, 'weight_decay': opt.weight_decay}]
-        if opt.use_adam:
+                    params += [{'params': [value], 'lr': lr, 'weight_decay': Config.weight_decay}]
+        if Config.use_adam:
             self.optimizer = t.optim.Adam(params)
         else:
             self.optimizer = t.optim.SGD(params, momentum=0.9)

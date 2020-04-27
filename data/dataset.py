@@ -6,11 +6,11 @@ from skimage import transform as sktsf
 from torchvision import transforms as tvtsf
 from data import util
 import numpy as np
-from utils.config import opt
+from utils.config import Config
 
 
 def inverse_normalize(img):
-    if opt.caffe_pretrain:
+    if Config.caffe_vgg:
         img = img + (np.array([122.7717, 115.9465, 102.9801]).reshape(3, 1, 1))
         return img[::-1, :, :]
     # approximate un-normalize for visualize
@@ -67,7 +67,7 @@ def preprocess(img, min_size=600, max_size=1000):
     img = sktsf.resize(img, (C, H * scale, W * scale), mode='reflect',anti_aliasing=False)
     # both the longer and shorter should be less than
     # max_size and min_size
-    if opt.caffe_pretrain:
+    if Config.caffe_vgg:
         normalize = caffe_normalize
     else:
         normalize = pytorch_normalze

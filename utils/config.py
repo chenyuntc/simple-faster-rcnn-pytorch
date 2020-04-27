@@ -44,26 +44,30 @@ class Config:
     debug_file = '/tmp/debugf'
 
     test_num = 10000
-    # model
-    load_path = None
 
-    caffe_pretrain = False # use caffe pretrained model instead of torchvision
-    caffe_pretrain_path = 'checkpoints/vgg16_caffe.pth'
+    # ckpts
+    frc_ckpt_path = None
+    # frc_ckpt_path = '/content/drive/My Drive/lq_od_hyper/lq_od/ckpt/fasterrcnn_12222105_0.712649824453_caffe_pretrain.pth'
 
-    def _parse(self, kwargs):
-        state_dict = self._state_dict()
+    caffe_vgg = False  # use caffe pretrained model instead of torchvision
+    caffe_vgg_path = '/content/drive/My Drive/lq_od_hyper/lq_od/ckpt/vgg16_caffe.pth'
+    torchvision_vgg_path = '/content/drive/My Drive/lq_od_hyper/lq_od/ckpt/vgg16_torchvision.pth'
+
+    @classmethod
+    def _parse(cls, kwargs):
+        state_dict = cls._state_dict()
         for k, v in kwargs.items():
             if k not in state_dict:
                 raise ValueError('UnKnown Option: "--%s"' % k)
-            setattr(self, k, v)
+            setattr(cls, k, v)
 
         print('======user config========')
-        pprint(self._state_dict())
+        pprint(cls._state_dict())
         print('==========end============')
 
-    def _state_dict(self):
-        return {k: getattr(self, k) for k, _ in Config.__dict__.items() \
+    @classmethod
+    def _state_dict(cls):
+        return {k: getattr(cls, k) for k, _ in Config.__dict__.items() \
                 if not k.startswith('_')}
 
 
-opt = Config()

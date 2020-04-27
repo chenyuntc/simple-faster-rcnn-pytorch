@@ -6,24 +6,24 @@ from model.region_proposal_network import RegionProposalNetwork
 from model.faster_rcnn import FasterRCNN
 from model.roi_module import RoIPooling2D
 from utils import array_tool as at
-from utils.config import opt
+from utils.config import Config
 
 
 def decom_vgg16():
     # the 30th layer of features is relu of conv5_3
-    if opt.caffe_pretrain:
+    if Config.caffe_vgg:
         model = vgg16(pretrained=False)
-        if not opt.load_path:
-            model.load_state_dict(t.load(opt.caffe_pretrain_path))
+        if not Config.frc_ckpt_path:
+            model.load_state_dict(t.load(Config.caffe_vgg_path))
     else:
-        model = vgg16(not opt.load_path)
+        model = vgg16(not Config.frc_ckpt_path)
 
     features = list(model.features)[:30]
     classifier = model.classifier
 
     classifier = list(classifier)
     del classifier[6]
-    if not opt.use_drop:
+    if not Config.use_drop:
         del classifier[5]
         del classifier[2]
     classifier = nn.Sequential(*classifier)

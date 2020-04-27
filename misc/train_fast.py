@@ -4,7 +4,7 @@ import ipdb
 import matplotlib
 from tqdm import tqdm
 
-from utils.config import opt
+from utils.config import Config
 from data.dataset import Dataset, TestDataset
 from model import FasterRCNNVGG16
 from torch.utils import data as data_
@@ -37,16 +37,16 @@ def eval(dataloader, faster_rcnn, test_num=10000):
 
 
 def train(**kwargs):
-    opt._parse(kwargs)
+    Config._parse(kwargs)
 
-    dataset = Dataset(opt)
+    dataset = Dataset(Config)
     print('load data')
     dataloader = data_.DataLoader(dataset, \
                                   batch_size=1, \
                                   shuffle=True, \
                                   # pin_memory=True,
-                                  num_workers=opt.num_workers)
-    testset = TestDataset(opt)
+                                  num_workers=Config.num_workers)
+    testset = TestDataset(Config)
     test_dataloader = data_.DataLoader(testset,
                                        batch_size=1,
                                        num_workers=2,
@@ -56,9 +56,9 @@ def train(**kwargs):
     faster_rcnn = FasterRCNNVGG16()
     print('model construct completed')
     trainer = FasterRCNNTrainer(faster_rcnn).cuda()
-    if opt.load_path:
-        trainer.load(opt.load_path)
-        print('load pretrained model from %s' % opt.load_path)
+    if Config.frc_ckpt_path:
+        trainer.load(Config.frc_ckpt_path)
+        print('load pretrained model from %s' % Config.frc_ckpt_path)
 
     trainer.vis.text(dataset.db.label_names, win='labels')
     best_map = 0
@@ -69,8 +69,8 @@ def train(**kwargs):
             img, bbox, label = img.cuda().float(), bbox_.cuda(), label_.cuda()
             losses = trainer.train_step(img, bbox, label, scale)
 
-            if (ii + 1) % opt.plot_every == 0:
-                if os.path.exists(opt.debug_file):
+            if (ii + 1) % Config.plot_every == 0:
+                if os.path.exists(Config.debug_file):
                     ipdb.set_trace()
 
                 # plot loss
@@ -96,7 +96,7 @@ def train(**kwargs):
                 # roi confusion matrix
                 trainer.vis.img('roi_cm', at.totensor(trainer.roi_cm.conf, False).float())
         if epoch==4:
-            trainer.faster_rcnn.scale_lr(opt.lr_decay)
+            trainer.faster_rcnn.scale_lr(Config.lr_decay)
 
     eval_result = eval(test_dataloader, faster_rcnn, test_num=1e100)
     print('eval_result')
