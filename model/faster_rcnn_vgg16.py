@@ -1,5 +1,5 @@
 from __future__ import  absolute_import
-import torch as t
+import torch as tc
 from torch import nn
 from torchvision.models import vgg16
 from model.region_proposal_network import RegionProposalNetwork
@@ -11,12 +11,28 @@ from utils.config import Config
 
 def decom_vgg16():
     # the 30th layer of features is relu of conv5_3
-    if Config.caffe_vgg:
+    
+    if Config.frc_ckpt_path:
         model = vgg16(pretrained=False)
-        if not Config.frc_ckpt_path:
-            model.load_state_dict(t.load(Config.caffe_vgg_path))
+        print(f'the whole frc ckpt will be loaded soon from {Config.caffe_vgg_path}...')
+    elif Config.caffe_vgg:
+        if Config.caffe_vgg_path:
+            model = vgg16(pretrained=False)
+            model.load_state_dict(tc.load(Config.caffe_vgg_path))
+            print(f'caffe vgg ckpt loaded from {Config.caffe_vgg_path}')
+        else:
+            print(f'download the torchvision vgg ckpt...')
+            model = vgg16(pretrained=True)
+            print(f'download the torchvision vgg ckpt complete')
     else:
-        model = vgg16(not Config.frc_ckpt_path)
+        if Config.torchvision_vgg_path:
+            model = vgg16(pretrained=False)
+            model.load_state_dict(tc.load(Config.torchvision_vgg_path))
+            print(f'torchvision vgg ckpt loaded from {Config.torchvision_vgg_path}')
+        else:
+            print(f'download the torchvision vgg ckpt...')
+            model = vgg16(pretrained=True)
+            print(f'download the torchvision vgg ckpt complete')
 
     features = list(model.features)[:30]
     classifier = model.classifier
@@ -134,7 +150,7 @@ class VGG16RoIHead(nn.Module):
         # in case roi_indices is  ndarray
         roi_indices = at.totensor(roi_indices).float()
         rois = at.totensor(rois).float()
-        indices_and_rois = t.cat([roi_indices[:, None], rois], dim=1)
+        indices_and_rois = tc.cat([roi_indices[:, None], rois], dim=1)
         # NOTE: important: yx->xy
         xy_indices_and_rois = indices_and_rois[:, [0, 2, 1, 4, 3]]
         indices_and_rois =  xy_indices_and_rois.contiguous()
