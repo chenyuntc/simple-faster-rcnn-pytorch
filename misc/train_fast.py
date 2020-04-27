@@ -55,7 +55,7 @@ def train(**kwargs):
                                        )
     faster_rcnn = FasterRCNNVGG16()
     print('model construct completed')
-    trainer = FasterRCNNTrainer(faster_rcnn).cuda()
+    trainer = FasterRCNNTrainer(faster_rcnn, using_visdom=False).cuda()
     if Config.frc_ckpt_path:
         trainer.load(Config.frc_ckpt_path)
         print('load pretrained model from %s' % Config.frc_ckpt_path)
