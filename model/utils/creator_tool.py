@@ -1,8 +1,7 @@
 import numpy as np
-import cupy as cp
-
+import torch
+from torchvision.ops import nms
 from model.utils.bbox_tools import bbox2loc, bbox_iou, loc2bbox
-from model.utils.nms import non_maximum_suppression
 
 
 class ProposalTargetCreator(object):
@@ -415,16 +414,18 @@ class ProposalCreator:
         if n_pre_nms > 0:
             order = order[:n_pre_nms]
         roi = roi[order, :]
+        score = score[order]
 
         # Apply nms (e.g. threshold = 0.7).
         # Take after_nms_topN (e.g. 300).
 
         # unNOTE: somthing is wrong here!
         # TODO: remove cuda.to_gpu
-        keep = non_maximum_suppression(
-            cp.ascontiguousarray(cp.asarray(roi)),
-            thresh=self.nms_thresh)
+        keep = nms(
+            torch.from_numpy(roi).cuda(),
+            torch.from_numpy(score).cuda(),
+            self.nms_thresh)
         if n_post_nms > 0:
             keep = keep[:n_post_nms]
-        roi = roi[keep]
+        roi = roi[keep.cpu().numpy()]
         return roi

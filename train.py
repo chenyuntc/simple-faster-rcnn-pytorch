@@ -1,6 +1,4 @@
 from __future__ import  absolute_import
-# though cupy is not used but without this line, it raise errors...
-import cupy as cp
 import os
 
 import ipdb

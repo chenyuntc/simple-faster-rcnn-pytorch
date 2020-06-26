@@ -2,19 +2,21 @@
 
 ## 1. Introduction
 
-**I've update the code to support both Python2 and Python3, PyTorch 1.0. If you want the old version code please checkout branch [v0.3](https://github.com/chenyuntc/simple-faster-rcnn-pytorch/tree/0.3)**
+**[Update:]** I've further simplified the code to pytorch 1.5, torchvision 0.6, and replace the customized ops roipool and nms with the one from torchvision.  if you want the old version code, please checkout branch [v1.0](https://github.com/chenyuntc/simple-faster-rcnn-pytorch/tree/v1.0)
 
-This project is a **Simplified** Faster R-CNN implementation based on [chainercv](https://github.com/chainer/chainercv) and other [projects](#acknowledgement) . It aims to:
+
+
+This project is a **Simplified** Faster R-CNN implementation based on [chainercv](https://github.com/chainer/chainercv) and other [projects](#acknowledgement) . I hope it can serve as an start code for those who want to know the detail of Faster R-CNN.  It aims to:
 
 - Simplify the code (*Simple is better than complex*)
 - Make the code more straightforward (*Flat is better than nested*)
 - Match the performance reported in [origin paper](https://arxiv.org/abs/1506.01497) (*Speed Counts and mAP Matters*)
 
 And it has the following features:
-- It can be run as pure Python code, no more build affair. (cuda code moves to cupy, Cython acceleration are optional)
+- It can be run as pure Python code, no more build affair. 
 - It's a minimal implemention in around 2000 lines valid code with a lot of comment and instruction.(thanks to chainercv's excellent documentation)
 - It achieves higher mAP than the origin implementation (0.712 VS 0.699)
-- It achieve speed compariable with other implementation (6fps and 14fps for train and test in TITAN XP with cython)
+- It achieve speed compariable with other implementation (6fps and 14fps for train and test in TITAN XP)
 - It's memory-efficient (about 3GB for vgg16)
 
 
@@ -50,27 +52,36 @@ VGG16 train on `trainval` and test on `test` split.
 It could be faster by removing visualization, logging, averaging loss etc.
 ## 3. Install dependencies
 
-requires PyTorch >=0.4
 
-- install PyTorch >=0.4 with GPU (code are GPU-only), refer to [official website](http://pytorch.org)
+Here is an example of create environ **from scratch** with `anaconda`
 
-- install cupy, you can install via `pip install cupy-cuda80` or(cupy-cuda90,cupy-cuda91, etc).
+```sh
+# create conda env
+conda create --name simp python=3.7
+conda activate simp
+# install pytorch
+conda install pytorch torchvision cudatoolkit=10.2 -c pytorch
 
-- install other dependencies:  `pip install -r requirements.txt `
+# install other dependancy
+pip install visdom scikit-image tqdm fire ipdb pprint matplotlib torchnet
 
-- Optional, but strongly recommended: build cython code `nms_gpu_post`: 
+# start visdom
+nohup python -m visdom.server &
 
-  ```Bash
-  cd model/utils/nms/
-  python build.py build_ext --inplace
-  cd -
-  ```
+```
+
+If you don't use anaconda, then:
+
+- install PyTorch with GPU (code are GPU-only), refer to [official website](http://pytorch.org)
+
+- install other dependencies:  `pip install visdom scikit-image tqdm fire ipdb pprint matplotlib torchnet`
 
 - start visdom for visualization
 
 ```Bash
 nohup python -m visdom.server &
 ```
+
 
 
 ## 4. Demo
@@ -114,7 +125,7 @@ See [demo.ipynb](https://github.com/chenyuntc/simple-faster-rcnn-pytorch/blob/ma
 4. modify `voc_data_dir` cfg item in `utils/config.py`, or pass it to program using argument like `--voc-data-dir=/path/to/VOCdevkit/VOC2007/` .
 
 
-### 5.2 Prepare caffe-pretrained vgg16
+### 5.2 [Optional]Prepare caffe-pretrained vgg16
 
 If you want to use caffe-pretrain model as initial weight, you can run below to get vgg16 weights converted from caffe, which is the same as the origin paper use.
 
@@ -134,12 +145,9 @@ If you want to use pretrained model from torchvision, you may skip this step.
 
 ### 5.3 begin training
 
-```Bash
-mkdir checkpoints/ # folder for snapshots
-```
 
 ```bash
-python train.py train --env='fasterrcnn-caffe' --plot-every=100 --caffe-pretrain
+python train.py train --env='fasterrcnn' --plot-every=100
 ```
 
 you may refer to `utils/config.py` for more argument.
@@ -165,16 +173,10 @@ you may open browser, visit `http://<ip>:8097` and see the visualization of trai
   see [discussion](https://github.com/pytorch/pytorch/issues/973#issuecomment-346405667), It's alreadly fixed in [train.py](https://github.com/chenyuntc/simple-faster-rcnn-pytorch/blob/master/train.py#L17-L22). So I think you are free from this problem.
   
 - Windows support
- 
+
   I don't have windows machine with GPU to debug and test it. It's welcome if anyone could make a pull request and test it.
 
-## More
 
-- [ ] training on coco
-- [ ] resnet
-- [ ] Maybe；replace cupy with THTensor+cffi?
-- [ ] Maybe：Convert all numpy code to tensor?
-- [x] python2-compatibility
 
 ## Acknowledgement
 This work builds on many excellent works, which include:
