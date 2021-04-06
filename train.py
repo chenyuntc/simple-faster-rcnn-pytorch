@@ -60,7 +60,7 @@ def train(**kwargs):
                                        batch_size=1,
                                        num_workers=opt.test_num_workers,
                                        shuffle=False, \
-                                       pin_memory=True
+                                       pin_memory=False
                                        )
     faster_rcnn = FasterRCNNVGG16()
     print('model construct completed')

@@ -7,10 +7,10 @@ from pprint import pprint
 
 class Config:
     # data
-    voc_data_dir = '/dataset/PASCAL2007/VOC2007/'
+    voc_data_dir = '/home/featurize/data/VOCdevkit/VOC2007/'
     min_size = 600  # image resize
     max_size = 1000 # image resize
-    num_workers = 8
+    num_workers = 0
     test_num_workers = 8
 
     # sigma for l1_smooth_loss
