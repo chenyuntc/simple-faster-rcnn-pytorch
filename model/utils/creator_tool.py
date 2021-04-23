@@ -3,7 +3,16 @@ import torch
 from torchvision.ops import nms
 from model.utils.bbox_tools import bbox2loc, bbox_iou, loc2bbox
 
-
+# Proposal_TragetCreator的作用又是什么呢？简略点说那就是提供GroundTruth样本供ROISHeads网络进行自我训练的！那这个ROISHeads网络又是什么呢？就是接收ROIS对它进行n_class类别的预测以及最终目标检测位置的！
+# 也就是最终输出结果的网络啊，你说它重要不重要！最终输出结果的网络的性能的好坏完全取决于它
+# ProposalCreator产生2000个ROIS，但是这些ROIS并不都用于训练，经过本ProposalTargetCreator的筛选产生128个用于自身的训练，规则如下:
+# 1 ROIS和GroundTruth_bbox的IOU大于0.5,选取一些(比如说本实验的32个)作为正样本
+# 2 选取ROIS和GroundTruth_bbox的IOUS小于等于0的选取一些比如说选取128-32=96个作为负样本
+# 3 然后分别对ROI_Headers进行训练
+# 首先确定bbox.shape找出n_bbox的个数，然后将bbox和rois连接起来，确定需要的正样本的个数，调用bbox_iou进行IOU的计算，按行找到最大值，返回最大值对应的序号以及其真正的IOU，
+# 之后利用最大值的序号将那些挑出的最大值的label+1从0,n_fg_class-1 变到1,n_fg_class，同样的根据IOUS的最大值将正负样本找出来，如果找出的样本数目过多就随机丢掉一些，
+# 之后将正负样本序号连接起来，得到它们对应的真实的label，然后统一的将负样本的label全部置为0，这样筛选出来的样本的label就已经确定了，之后将sample_rois取出来，
+# 根据它和bbox的偏移量计算出loc,最后返回sample_rois,gt_roi_loc和gt_rois_label
 class ProposalTargetCreator(object):
     """Assign ground truth bounding boxes to given RoIs.
 
@@ -131,7 +140,18 @@ class ProposalTargetCreator(object):
 
         return sample_roi, gt_roi_loc, gt_roi_label
 
-
+# AnchorTargetCreator的作用是啥呢？其实AnchorTargetCreator的作用就是为Faster-RCNN专有的RPN网络提供自我训练的样本，
+# RPN网络正是利用AnchorTargetCreator产生的样本作为数据进行网络的训练和学习的，这样产生的预测anchor的类别和位置才更加精确，
+# anchor变成真正的ROIS需要进行位置修正，而AnchorTargetCreator产生的带标签的样本就是给RPN网络进行训练学习用哒！自我修正自我提高！
+# 那么AnchorTargetCreator选取样本的标准是什么呢？
+# 答：之前我们直到_enumerate_shifted_anchor函数在一幅图上产生了20000多个anchor，而AnchorTargetCreator就是要从20000多个Anchor选出256个用于二分类和所有的位置回归！为预测值提供对应的真实值，选取的规则是：
+# 1.对于每一个Ground_truth bounding_box 从anchor中选取和它重叠度最高的一个anchor作为样本！
+# 2.从剩下的anchor中选取和Ground_truth bounding_box重叠度超过0.7的anchor作为样本，注意正样本的数目不能超过128
+# 3.随机的从剩下的样本中选取和gt_bbox重叠度小于0.3的anchor作为负样本，正负样本之和为256
+#  PS:需要注意的是对于每一个anchor，gt_label要么为1,要么为0,所以这样实现二分类，而计算回归损失时，只有正样本计算损失，负样本不参与计算。
+# 首先是读取图片的尺寸大小，然后用len(anchor)读取anchor的个数，一般对应20000个左右，之后调用_get_inside_index(anchor,img_H,img_W)来将那些超出图片范围的anchor全部去掉，
+# mask只保留位于图片内部的，再调用self._create_label(inside_index,anchor,bbox)筛选出符合条件的正例128个负例128并给它们附上相应的label，
+# 最后调用bbox2loc将anchor和bbox进行求偏差当作回归计算的目标！
 class AnchorTargetCreator(object):
     """Assign the ground truth bounding boxes to anchors.
 
@@ -212,7 +232,11 @@ class AnchorTargetCreator(object):
         loc = _unmap(loc, n_anchor, inside_index, fill=0)
 
         return loc, label
-
+    # 首先初始化label,然后label.fill(-1)将所有标号全部置为-1,调用_clac_ious(anchor,bbox,inside_dex)产生argmax_ious,max_ious,gt_argmax_ious ，
+    # 之后进行判断，如果label[max_ious<self.neg_ious_thresh] = 0定义为负样本，而label[gt_argmax_ous]=1直接定义为正样本，同时label[max_ious>self.pos_iou_thresh]=1也定义为正样本，
+    # 这里的定义规则其实gt_argmax_ious就是和gt_bbox重叠读最高的anchor，直接定义为正样本,而max_ious就是指的重叠度大于0.7的直接定义为正样本，而小于0.3的定义负样本，和开始讲的规则实际是一一对应的，
+    # 程序接下来还有一个判断就是说如果选出来的label==1的个数大于pos_ratio*n_samples就是正样本如果按照这个规则选取多了的话，就调用np.random.choice(pos_index,size(len(pos_index)-n_pos),replace=False)就是总数不变随机丢弃掉一些正样本的意思！
+    # 同样的方法如果负样本选择多了也随机丢弃掉一些，最后将序列argmax_ious,label返回！
     def _create_label(self, inside_index, anchor, bbox):
         # label: 1 is positive, 0 is negative, -1 is dont care
         label = np.empty((len(inside_index),), dtype=np.int32)
@@ -286,7 +310,9 @@ def _get_inside_index(anchor, H, W):
     )[0]
     return index_inside
 
-
+# proposal的作用又是啥咧？ 其实proposalCreator做的就是生成ROIS的过程，而且整个过程只有前向计算没有反向传播，所以完全可以只用numpy和Tensor就把它计算出来咯！ 那具体的选取流程又是啥样的呢？
+# 对于每张图片，利用FeatureMap,计算H/16*W/16*9大约20000个anchor属于前景的概率和其对应的位置参数，这个就是RPN网络正向作用的过程，没毛病，然后从中选取概率较大的12000张，利用位置回归参数，
+# 修正这12000个anchor的位置4 利用非极大值抑制，选出2000个ROIS！没错，整个流程读下来发现确实只有前向传播的过程
 class ProposalCreator:
     # unNOTE: I'll make it undifferential
     # unTODO: make sure it's ok

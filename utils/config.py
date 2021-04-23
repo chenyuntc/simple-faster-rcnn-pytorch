@@ -6,7 +6,7 @@ from pprint import pprint
 # e.g. --voc-data-dir='./data/'
 
 class Config:
-    # data
+    # data 数据集所在的路径
     voc_data_dir = '/home/featurize/data/VOCdevkit/VOC2007/'
     min_size = 600  # image resize
     max_size = 1000 # image resize
@@ -25,8 +25,8 @@ class Config:
 
 
     # visualization
-    env = 'faster-rcnn'  # visdom env
-    port = 8097
+    env = 'faster-rcnn'  # visdom env 为了visdom显示用
+    port = 8097 # 可视化的端口
     plot_every = 40  # vis every N iter
 
     # preset
@@ -51,6 +51,8 @@ class Config:
     caffe_pretrain_path = 'checkpoints/vgg16_caffe.pth'
 
     def _parse(self, kwargs):
+        # 因为经过了 _state_dict,所以此时dict中都是config.py的变量，不包括_开头
+        # 显然包括了 env 与 plot_every 所以可以通过传入参数的形式更改
         state_dict = self._state_dict()
         for k, v in kwargs.items():
             if k not in state_dict:
@@ -61,9 +63,10 @@ class Config:
         pprint(self._state_dict())
         print('==========end============')
 
+    # 遍历config.py 所有不以 _开头的变量都作为一个dict的key，他们的值作为dict的value生成dict
     def _state_dict(self):
         return {k: getattr(self, k) for k, _ in Config.__dict__.items() \
-                if not k.startswith('_')}
+                if not k.startswith('_')}    #这里特意不以 _开头，取 not 代表取反
 
 
 opt = Config()
