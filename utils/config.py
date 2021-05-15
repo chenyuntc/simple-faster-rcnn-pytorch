@@ -37,7 +37,7 @@ class Config:
     epoch = 14
 
 
-    use_adam = False # Use Adam optimizer To do
+    use_adam = True # Use Adam optimizer To do
     use_chainer = False # try match everything as chainer
     use_drop = False # use dropout in RoIHead
     # debug
